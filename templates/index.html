@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SSBR 뉴스 인텔리전스 대시보드</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <style>
+    body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
+
+    .hero-gradient {
+      background: linear-gradient(135deg, #0a1628 0%, #0f2d5e 45%, #102545 100%);
+    }
+
+    .card-hover {
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .card-hover:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+    }
+
+    .score-badge-high {
+      background: linear-gradient(135deg, #059669, #10b981);
+    }
+    .score-badge-mid {
+      background: linear-gradient(135deg, #d97706, #f59e0b);
+    }
+
+    .keyword-chip {
+      background: linear-gradient(135deg, #eff6ff, #dbeafe);
+      border: 1px solid #bfdbfe;
+      color: #1d4ed8;
+    }
+
+    @keyframes spin-slow {
+      to { transform: rotate(360deg); }
+    }
+    .spin-slow { animation: spin-slow 1.5s linear infinite; }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .fade-in-up {
+      animation: fadeInUp 0.4s ease forwards;
+    }
+
+    .stat-card {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12);
+      backdrop-filter: blur(8px);
+    }
+
+    .insight-box {
+      background: linear-gradient(135deg, #fefce8, #fef9c3);
+      border-left: 3px solid #eab308;
+    }
+
+    .summary-box {
+      background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+      border-left: 3px solid #0284c7;
+    }
+
+    .pulse-ring {
+      animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .shimmer {
+      background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+    @keyframes shimmer {
+      0%   { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #f1f5f9; }
+    ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 3px; }
+  </style>
+</head>
+<body class="bg-slate-100 min-h-screen">
+
+  <!-- ══ HEADER ══════════════════════════════════════════════════════ -->
+  <header class="hero-gradient text-white shadow-2xl">
+    <div class="max-w-7xl mx-auto px-6 py-6">
+      <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+
+        <!-- 타이틀 -->
+        <div>
+          <div class="flex items-center gap-3 mb-1">
+            <div class="w-9 h-9 bg-blue-500/30 rounded-lg flex items-center justify-center">
+              <i class="fas fa-atom text-blue-300 text-lg"></i>
+            </div>
+            <h1 class="text-xl md:text-2xl font-bold tracking-tight">SSBR 뉴스 인텔리전스</h1>
+            <span class="hidden sm:inline bg-blue-500/25 text-blue-200 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-blue-400/30">
+              AI POWERED
+            </span>
+          </div>
+          <p class="text-slate-400 text-sm ml-12">
+            양말단 SSBR 비즈니스 관련 글로벌 뉴스 자동 수집 &amp; AI 선별 분석 대시보드
+          </p>
+        </div>
+
+        <!-- 수집 버튼 -->
+        <button
+          id="collectBtn"
+          onclick="collectNews()"
+          class="flex items-center gap-2.5 bg-blue-600 hover:bg-blue-500 active:bg-blue-700
+                 text-white font-semibold px-5 py-2.5 rounded-xl shadow-lg
+                 transition-all duration-200 whitespace-nowrap select-none"
+        >
+          <i id="btnIcon" class="fas fa-satellite-dish text-sm"></i>
+          <span id="btnText">뉴스 수집 및 분석</span>
+        </button>
+      </div>
+
+      <!-- 통계 바 -->
+      <div id="statsBar" class="hidden mt-5 grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div class="stat-card rounded-xl px-4 py-3">
+          <p class="text-slate-400 text-xs mb-0.5">수집된 기사</p>
+          <p class="text-white text-xl font-bold" id="statCollected">—</p>
+        </div>
+        <div class="stat-card rounded-xl px-4 py-3">
+          <p class="text-slate-400 text-xs mb-0.5">선별된 기사 (80점+)</p>
+          <p class="text-emerald-400 text-xl font-bold" id="statFiltered">—</p>
+        </div>
+        <div class="stat-card rounded-xl px-4 py-3">
+          <p class="text-slate-400 text-xs mb-0.5">분석 소요 시간</p>
+          <p class="text-blue-300 text-xl font-bold" id="statElapsed">—</p>
+        </div>
+        <div class="stat-card rounded-xl px-4 py-3">
+          <p class="text-slate-400 text-xs mb-0.5">마지막 수집</p>
+          <p class="text-slate-200 text-sm font-semibold mt-0.5" id="statTimestamp">—</p>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ══ MAIN ════════════════════════════════════════════════════════ -->
+  <main class="max-w-7xl mx-auto px-6 py-8">
+
+    <!-- 초기 안내 -->
+    <div id="emptyState" class="flex flex-col items-center justify-center py-20 text-center">
+      <div class="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mb-5">
+        <i class="fas fa-newspaper text-blue-400 text-3xl"></i>
+      </div>
+      <h2 class="text-xl font-semibold text-slate-700 mb-2">분석 준비 완료</h2>
+      <p class="text-slate-500 max-w-sm text-sm leading-relaxed">
+        상단의 <strong class="text-slate-700">뉴스 수집 및 분석</strong> 버튼을 클릭하면
+        글로벌 뉴스를 수집하고 AI가 양말단 SSBR 연관 기사를 자동으로 선별합니다.
+      </p>
+      <div class="mt-6 flex flex-wrap justify-center gap-2">
+        <span class="bg-white border border-slate-200 text-slate-600 text-xs px-3 py-1.5 rounded-full shadow-sm">
+          <i class="fas fa-globe text-blue-400 mr-1"></i> Google News 다중 쿼리
+        </span>
+        <span class="bg-white border border-slate-200 text-slate-600 text-xs px-3 py-1.5 rounded-full shadow-sm">
+          <i class="fas fa-brain text-purple-400 mr-1"></i> Claude AI 선별 (80점 이상)
+        </span>
+        <span class="bg-white border border-slate-200 text-slate-600 text-xs px-3 py-1.5 rounded-full shadow-sm">
+          <i class="fas fa-lightbulb text-yellow-400 mr-1"></i> 비즈니스 인사이트 자동 생성
+        </span>
+      </div>
+    </div>
+
+    <!-- 로딩 -->
+    <div id="loadingState" class="hidden">
+      <div class="flex flex-col items-center py-16">
+        <div class="relative mb-6">
+          <div class="w-16 h-16 border-4 border-blue-100 rounded-full"></div>
+          <div class="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full spin-slow absolute inset-0"></div>
+        </div>
+        <p class="text-slate-700 font-semibold text-lg mb-1" id="loadingMsg">뉴스 수집 중...</p>
+        <p class="text-slate-400 text-sm">글로벌 뉴스 소스에서 SSBR 관련 기사를 수집하고 AI가 분석 중입니다</p>
+      </div>
+      <!-- 스켈레톤 -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-5 mt-4">
+        <div class="bg-white rounded-2xl p-5 shadow-sm" style="animation-delay:0ms">
+          <div class="shimmer h-4 w-3/4 rounded mb-3"></div>
+          <div class="shimmer h-3 w-1/3 rounded mb-4"></div>
+          <div class="shimmer h-20 rounded mb-3"></div>
+          <div class="shimmer h-16 rounded"></div>
+        </div>
+        <div class="bg-white rounded-2xl p-5 shadow-sm hidden lg:block">
+          <div class="shimmer h-4 w-2/3 rounded mb-3"></div>
+          <div class="shimmer h-3 w-1/2 rounded mb-4"></div>
+          <div class="shimmer h-20 rounded mb-3"></div>
+          <div class="shimmer h-16 rounded"></div>
+        </div>
+        <div class="bg-white rounded-2xl p-5 shadow-sm hidden xl:block">
+          <div class="shimmer h-4 w-4/5 rounded mb-3"></div>
+          <div class="shimmer h-3 w-1/3 rounded mb-4"></div>
+          <div class="shimmer h-20 rounded mb-3"></div>
+          <div class="shimmer h-16 rounded"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 오류 -->
+    <div id="errorState" class="hidden flex flex-col items-center py-16 text-center">
+      <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
+        <i class="fas fa-triangle-exclamation text-red-500 text-2xl"></i>
+      </div>
+      <h3 class="text-lg font-semibold text-slate-700 mb-1">오류가 발생했습니다</h3>
+      <p id="errorMsg" class="text-slate-500 text-sm max-w-md"></p>
+      <button
+        onclick="collectNews()"
+        class="mt-5 bg-red-600 hover:bg-red-500 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors"
+      >
+        <i class="fas fa-rotate-right mr-2"></i>재시도
+      </button>
+    </div>
+
+    <!-- 빈 결과 -->
+    <div id="noResultState" class="hidden flex flex-col items-center py-16 text-center">
+      <div class="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mb-4">
+        <i class="fas fa-filter text-amber-500 text-2xl"></i>
+      </div>
+      <h3 class="text-lg font-semibold text-slate-700 mb-1">선별된 기사 없음</h3>
+      <p class="text-slate-500 text-sm max-w-sm">
+        수집된 기사 중 연관성 80점 이상인 SSBR 관련 기사가 없습니다. 잠시 후 다시 시도하세요.
+      </p>
+    </div>
+
+    <!-- 기사 그리드 -->
+    <div id="articlesGrid" class="hidden grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-5">
+    </div>
+
+  </main>
+
+  <!-- ══ 기사 카드 템플릿 (JS용) ══════════════════════════════════════ -->
+  <template id="articleCardTpl">
+    <article class="bg-white rounded-2xl shadow-sm card-hover overflow-hidden border border-slate-100 fade-in-up">
+
+      <!-- 상단 색상 바 + 점수 -->
+      <div class="score-bar h-1.5"></div>
+      <div class="p-5">
+
+        <!-- 점수 + 출처 -->
+        <div class="flex items-start justify-between gap-3 mb-3">
+          <div class="flex items-center gap-2 flex-wrap">
+            <span class="score-badge text-white text-sm font-bold px-3 py-1 rounded-full shadow-sm">
+              <i class="fas fa-star text-xs mr-1"></i><span class="score-text"></span>
+            </span>
+            <span class="text-slate-500 text-xs flex items-center gap-1">
+              <i class="fas fa-building text-slate-300 text-xs"></i>
+              <span class="source-text"></span>
+            </span>
+          </div>
+          <span class="date-text text-slate-400 text-xs whitespace-nowrap mt-1"></span>
+        </div>
+
+        <!-- 제목 -->
+        <a class="article-link block hover:text-blue-600 transition-colors" target="_blank" rel="noopener">
+          <h3 class="title-text font-semibold text-slate-800 text-sm leading-snug mb-3 line-clamp-3 hover:underline"></h3>
+        </a>
+
+        <!-- 핵심 키워드 -->
+        <div class="keywords-wrap flex flex-wrap gap-1.5 mb-3"></div>
+
+        <!-- 요약 -->
+        <div class="summary-box rounded-xl p-3.5 mb-3">
+          <p class="text-xs font-semibold text-sky-700 mb-1.5 flex items-center gap-1">
+            <i class="fas fa-align-left"></i> AI 요약
+          </p>
+          <p class="summary-text text-slate-700 text-xs leading-relaxed"></p>
+        </div>
+
+        <!-- 비즈니스 인사이트 -->
+        <div class="insight-box rounded-xl p-3.5">
+          <p class="text-xs font-semibold text-yellow-700 mb-1.5 flex items-center gap-1">
+            <i class="fas fa-lightbulb"></i> 비즈니스 인사이트
+          </p>
+          <p class="insight-text text-slate-700 text-xs leading-relaxed"></p>
+        </div>
+
+      </div>
+    </article>
+  </template>
+
+  <script>
+    /* ── 상태 관리 ─────────────────────────────────────────── */
+    const $ = id => document.getElementById(id);
+
+    function show(id)  { $(id).classList.remove('hidden'); }
+    function hide(id)  { $(id).classList.add('hidden'); }
+    function hideAll() {
+      ['emptyState','loadingState','errorState','noResultState','articlesGrid'].forEach(hide);
+    }
+
+    /* ── 날짜 포맷 ─────────────────────────────────────────── */
+    function formatDate(str) {
+      if (!str) return '';
+      try {
+        const d = new Date(str);
+        return d.toLocaleDateString('ko-KR', { year:'numeric', month:'2-digit', day:'2-digit' });
+      } catch { return str.slice(0, 10); }
+    }
+
+    /* ── 점수별 색상 ──────────────────────────────────────── */
+    function scoreStyle(score) {
+      if (score >= 90) return { bar: '#10b981', badge: 'score-badge-high' };
+      return { bar: '#f59e0b', badge: 'score-badge-mid' };
+    }
+
+    /* ── 카드 생성 ────────────────────────────────────────── */
+    function createCard(art, idx) {
+      const tpl = document.getElementById('articleCardTpl');
+      const clone = tpl.content.cloneNode(true);
+      const el = clone.querySelector('article');
+
+      el.style.animationDelay = `${idx * 60}ms`;
+
+      const style = scoreStyle(art.relevance_score);
+
+      el.querySelector('.score-bar').style.background = style.bar;
+      el.querySelector('.score-badge').classList.add(style.badge);
+      el.querySelector('.score-text').textContent = `${art.relevance_score}점`;
+      el.querySelector('.source-text').textContent = art.source || 'Unknown';
+      el.querySelector('.date-text').textContent = formatDate(art.published);
+
+      const link = el.querySelector('.article-link');
+      link.href = art.link && art.link !== '#' ? art.link : '#';
+      el.querySelector('.title-text').textContent = art.title;
+
+      // 키워드 칩
+      const kwWrap = el.querySelector('.keywords-wrap');
+      (art.core_keywords || []).forEach(kw => {
+        const chip = document.createElement('span');
+        chip.className = 'keyword-chip text-xs px-2.5 py-0.5 rounded-full font-medium';
+        chip.textContent = kw;
+        kwWrap.appendChild(chip);
+      });
+
+      el.querySelector('.summary-text').textContent = art.summary || '—';
+      el.querySelector('.insight-text').textContent = art.business_insight || '—';
+
+      return clone;
+    }
+
+    /* ── 통계 바 갱신 ────────────────────────────────────── */
+    function updateStats(stats) {
+      $('statCollected').textContent = `${stats.collected}건`;
+      $('statFiltered').textContent = `${stats.filtered}건`;
+      $('statElapsed').textContent = `${stats.elapsed}초`;
+      $('statTimestamp').textContent = stats.timestamp;
+      show('statsBar');
+    }
+
+    /* ── 메인 수집 함수 ──────────────────────────────────── */
+    async function collectNews() {
+      const btn = $('collectBtn');
+      $('btnIcon').className = 'fas fa-circle-notch text-sm spin-slow';
+      $('btnText').textContent = '분석 중...';
+      btn.disabled = true;
+      btn.classList.replace('bg-blue-600', 'bg-blue-400');
+      btn.classList.replace('hover:bg-blue-500', 'cursor-not-allowed');
+
+      hideAll();
+      show('loadingState');
+
+      try {
+        const res = await fetch('/api/collect', { method: 'POST' });
+        const data = await res.json();
+
+        if (!res.ok || data.error) {
+          hideAll();
+          $('errorMsg').textContent = data.error || '알 수 없는 오류가 발생했습니다.';
+          show('errorState');
+          return;
+        }
+
+        updateStats(data.stats);
+
+        if (!data.articles || data.articles.length === 0) {
+          hideAll();
+          show('noResultState');
+          return;
+        }
+
+        // 점수 내림차순 정렬
+        data.articles.sort((a, b) => b.relevance_score - a.relevance_score);
+
+        const grid = $('articlesGrid');
+        grid.innerHTML = '';
+        data.articles.forEach((art, i) => grid.appendChild(createCard(art, i)));
+
+        hideAll();
+        show('articlesGrid');
+
+      } catch (err) {
+        hideAll();
+        $('errorMsg').textContent = `네트워크 오류: ${err.message}`;
+        show('errorState');
+      } finally {
+        $('btnIcon').className = 'fas fa-satellite-dish text-sm';
+        $('btnText').textContent = '뉴스 수집 및 분석';
+        btn.disabled = false;
+        btn.classList.replace('bg-blue-400', 'bg-blue-600');
+        btn.classList.replace('cursor-not-allowed', 'hover:bg-blue-500');
+      }
+    }
+  </script>
+</body>
+</html>
