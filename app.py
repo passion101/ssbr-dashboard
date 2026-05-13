@@ -7,13 +7,12 @@ from datetime import datetime
 
 import feedparser
 import requests
-from google import genai
-from google.genai import types
+import anthropic
 from bs4 import BeautifulSoup
 from flask import Flask, jsonify, render_template
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv(override=True)
 
 app = Flask(__name__)
 
@@ -111,8 +110,8 @@ USER_PROMPT_TEMPLATE = """아래 기사 목록을 분석하여 양말단 SSBR �
 연관성 80점 미만 기사는 출력에서 완전히 제외하십시오. 반드시 JSON 형식만 출력하십시오."""
 
 
-def analyze_with_gemini(articles: list[dict]) -> dict:
-    client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
+def analyze_with_claude(articles: list[dict]) -> dict:
+    client = anthropic.Anthropic()
 
     articles_text = "\n\n".join(
         f"[{i+1}] 제목: {a['title']}\n출처: {a['source']}\n날짜: {a['published']}\n내용: {a['summary']}"
@@ -121,15 +120,13 @@ def analyze_with_gemini(articles: list[dict]) -> dict:
 
     prompt = USER_PROMPT_TEMPLATE.format(count=len(articles[:35]), articles=articles_text)
 
-    response = client.models.generate_content(
-        model="gemini-2.5-flash",
-        contents=prompt,
-        config=types.GenerateContentConfig(
-            system_instruction=SYSTEM_PROMPT,
-            max_output_tokens=4096,
-        ),
+    message = client.messages.create(
+        model="claude-sonnet-4-6",
+        max_tokens=4096,
+        system=SYSTEM_PROMPT,
+        messages=[{"role": "user", "content": prompt}],
     )
-    response_text = response.text.strip()
+    response_text = message.content[0].text.strip()
 
     json_match = re.search(r"\{[\s\S]*\}", response_text)
     if not json_match:
@@ -165,7 +162,7 @@ def collect():
         if not articles:
             return jsonify({"error": "뉴스를 수집할 수 없습니다. 네트워크 상태를 확인하세요."}), 503
 
-        result = analyze_with_gemini(articles)
+        result = analyze_with_claude(articles)
         filtered = result.get("articles", [])
 
         return jsonify({
@@ -181,8 +178,8 @@ def collect():
     except Exception as e:
         import traceback
         traceback.print_exc()
-        if "API_KEY" in str(e) or "api_key" in str(e) or "INVALID_ARGUMENT" in str(e):
-            return jsonify({"error": "Gemini API 키가 유효하지 않습니다. .env 파일의 GEMINI_API_KEY를 확인하세요."}), 401
+        if isinstance(e, anthropic.AuthenticationError):
+            return jsonify({"error": "Anthropic API 키가 유효하지 않습니다. .env 파일의 ANTHROPIC_API_KEY를 확인하세요."}), 401
         return jsonify({"error": f"서버 오류: {str(e)}"}), 500
 
 
