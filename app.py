@@ -128,11 +128,21 @@ def analyze_with_claude(articles: list[dict]) -> dict:
     )
     response_text = message.content[0].text.strip()
 
-    json_match = re.search(r"\{[\s\S]*\}", response_text)
-    if not json_match:
+    # 마크다운 코드블록 제거
+    response_text = re.sub(r"```(?:json)?\s*", "", response_text).strip()
+
+    # JSON 객체 추출 (가장 바깥 { } 범위)
+    start = response_text.find("{")
+    end = response_text.rfind("}") + 1
+    if start == -1 or end == 0:
         return {"articles": []}
 
-    parsed = json.loads(json_match.group())
+    try:
+        parsed = json.loads(response_text[start:end])
+    except json.JSONDecodeError as e:
+        print(f"[WARN] JSON parse error: {e}")
+        print(f"[WARN] Raw response: {response_text[:500]}")
+        return {"articles": []}
 
     # 원본 링크 및 날짜 재매핑
     title_map = {a["title"][:100].lower(): a for a in articles}
