@@ -517,29 +517,47 @@ def index():
 
 @app.route("/api/collect", methods=["POST"])
 def collect():
+    from flask import request as freq
     try:
         t0 = time.time()
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-        # 고객사/소재 기사 병렬 수집
-        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as ex:
-            f_cust = ex.submit(collect_articles, CUSTOMER_QUERIES)
-            f_mat  = ex.submit(collect_articles, MATERIAL_QUERIES)
-            customer_raw = f_cust.result()
-            material_raw = f_mat.result()
+        body = freq.get_json(silent=True) or {}
+        analysis_type = body.get("analysis_type", "all")  # 'all' | 'customer' | 'material'
+        print(f"[INFO] 분석 타입: {analysis_type}")
+
+        customer_raw, material_raw = [], []
+        customer_result = {"session_summary": {}, "articles": []}
+        material_result = {"session_summary": {}, "articles": []}
+
+        # 선택된 타입에 따라 수집 및 분석
+        if analysis_type == "all":
+            # 전체: 병렬 수집 + 병렬 분석
+            with concurrent.futures.ThreadPoolExecutor(max_workers=2) as ex:
+                f_cust = ex.submit(collect_articles, CUSTOMER_QUERIES)
+                f_mat  = ex.submit(collect_articles, MATERIAL_QUERIES)
+                customer_raw = f_cust.result()
+                material_raw = f_mat.result()
+
+            with concurrent.futures.ThreadPoolExecutor(max_workers=2) as ex:
+                f_ca = ex.submit(analyze_customers, customer_raw)
+                f_ma = ex.submit(analyze_materials, material_raw)
+                customer_result = f_ca.result()
+                material_result = f_ma.result()
+
+        elif analysis_type == "customer":
+            customer_raw    = collect_articles(CUSTOMER_QUERIES)
+            customer_result = analyze_customers(customer_raw)
+
+        elif analysis_type == "material":
+            material_raw    = collect_articles(MATERIAL_QUERIES)
+            material_result = analyze_materials(material_raw)
 
         collected_count = len(customer_raw) + len(material_raw)
         print(f"[INFO] 고객사 수집 {len(customer_raw)}건, 소재 수집 {len(material_raw)}건")
 
-        if not customer_raw and not material_raw:
+        if collected_count == 0:
             return jsonify({"error": "뉴스를 수집할 수 없습니다. 네트워크 상태를 확인하세요."}), 503
-
-        # 고객사/소재 Claude 분석 병렬 실행
-        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as ex:
-            f_ca = ex.submit(analyze_customers, customer_raw)
-            f_ma = ex.submit(analyze_materials, material_raw)
-            customer_result = f_ca.result()
-            material_result = f_ma.result()
 
         customer_articles = customer_result.get("articles", [])
         material_articles = material_result.get("articles", [])
