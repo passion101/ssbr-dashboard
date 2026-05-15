@@ -369,11 +369,8 @@ LG화학 HPM 사업부의 영업 인사이트 3가지를 도출하십시오.
       "company": "Hankook",
       "core_keywords": ["키워드1", "키워드2"],
       "summary": "SSBR 영업 관점 요약 2문장 (한국어)",
-      "sales_insights": [
-        "영업 인사이트 1: 구체적 공략 포인트 (한국어)",
-        "영업 인사이트 2: 제안 방향 (한국어)",
-        "영업 인사이트 3: 대응 전략 (한국어)"
-      ]
+      "score_reason": "연관성 점수 산정 사유 1문장 (한국어)",
+      "sales_insights": "LG화학 HPM 영업 공략 포인트·제안 방향·대응 전략을 포함한 3줄 이내 통합 인사이트 (한국어)"
     }}
   ]
 }}
@@ -418,6 +415,7 @@ LG화학 HPM 사업부의 비즈니스 인사이트를 도출하십시오.
       "relevance_score": 85,
       "material": "SSBR",
       "core_keywords": ["키워드1", "키워드2"],
+      "score_reason": "연관성 점수 산정 사유 1문장 (한국어)",
       "summary": "소재 비즈니스 관점 요약 2문장 (한국어)",
       "business_insight": "LG화학 HPM 사업부 대응 방안 2문장 (한국어)"
     }}
