@@ -19,18 +19,43 @@ app = Flask(__name__)
 
 DB_PATH = os.path.join(os.path.dirname(__file__), "ssbr.db")
 
-# ── 검색 쿼리 목록 ──────────────────────────────────────────────────
-SEARCH_QUERIES = [
-    "SSBR rubber tire 2025",
-    "solution styrene butadiene rubber production",
-    "functionalized SSBR silica coupling",
-    "electric vehicle EV tire low rolling resistance",
-    "tire silica compound performance polymer",
-    "EU tire labeling regulation 2025",
-    "ETRMA tire sustainability carbon",
-    "Michelin Bridgestone Continental tire innovation material",
-    "wet grip tire performance new material",
-    "synthetic rubber chemical polymer technology",
+# ── 고객사 정의 ────────────────────────────────────────────────────
+CUSTOMERS = {
+    "Hankook":     {"kor": "한국타이어", "color": "#f97316"},
+    "Kumho":       {"kor": "금호타이어",  "color": "#3b82f6"},
+    "Nexen":       {"kor": "넥센타이어",  "color": "#10b981"},
+    "Michelin":    {"kor": "Michelin",   "color": "#eab308"},
+    "Bridgestone": {"kor": "Bridgestone","color": "#ef4444"},
+    "Continental": {"kor": "Continental","color": "#8b5cf6"},
+}
+
+# ── 소재 정의 ──────────────────────────────────────────────────────
+MATERIALS = {
+    "SSBR":      {"desc": "Solution SBR",        "color": "#3b82f6"},
+    "SBR":       {"desc": "Emulsion SBR",        "color": "#f97316"},
+    "NBR":       {"desc": "Nitrile BR",           "color": "#10b981"},
+    "BR":        {"desc": "Butadiene Rubber",     "color": "#8b5cf6"},
+    "Silica":    {"desc": "실리카 컴파운드",        "color": "#06b6d4"},
+    "Bio-Rubber":{"desc": "바이오 기반 고무",       "color": "#84cc16"},
+}
+
+# ── 검색 쿼리 ──────────────────────────────────────────────────────
+CUSTOMER_QUERIES = [
+    "Hankook tire rubber compound material 2025",
+    "Kumho tire synthetic rubber innovation",
+    "Nexen tire EV electric vehicle material",
+    "Michelin tire sustainability rubber compound",
+    "Bridgestone tire rubber technology EV performance",
+    "Continental tire silica compound polymer",
+]
+
+MATERIAL_QUERIES = [
+    "SSBR solution styrene butadiene rubber market 2025",
+    "SBR styrene butadiene rubber production demand",
+    "NBR nitrile butadiene rubber application",
+    "butadiene rubber BR tire compound technology",
+    "silica tire compound rolling resistance performance",
+    "bio-based rubber sustainable tire material",
 ]
 
 
@@ -52,6 +77,8 @@ def init_db():
         CREATE TABLE IF NOT EXISTS articles (
             id               INTEGER PRIMARY KEY AUTOINCREMENT,
             session_id       INTEGER NOT NULL REFERENCES sessions(id),
+            analysis_type    TEXT    NOT NULL DEFAULT 'general',
+            tag              TEXT,
             title            TEXT,
             source           TEXT,
             published        TEXT,
@@ -59,18 +86,33 @@ def init_db():
             relevance_score  INTEGER,
             core_keywords    TEXT,
             summary          TEXT,
-            business_insight TEXT
+            business_insight TEXT,
+            sales_insights   TEXT
         );
     """)
+
+    # 기존 DB 마이그레이션: 신규 컬럼 누락 시 추가
+    existing = {row[1] for row in conn.execute("PRAGMA table_info(articles)").fetchall()}
+    migrations = {
+        "analysis_type":  "ALTER TABLE articles ADD COLUMN analysis_type TEXT NOT NULL DEFAULT 'general'",
+        "tag":            "ALTER TABLE articles ADD COLUMN tag TEXT",
+        "sales_insights": "ALTER TABLE articles ADD COLUMN sales_insights TEXT",
+    }
+    for col, sql in migrations.items():
+        if col not in existing:
+            conn.execute(sql)
+            print(f"[DB] 컬럼 추가: {col}")
+
     conn.commit()
     conn.close()
 
 
 # ── DB 저장 ─────────────────────────────────────────────────────────
 def save_session(created_at, collected_count, analyzed_count, elapsed_seconds,
-                 session_summary, articles):
+                 session_summary, customer_articles, material_articles):
     if not isinstance(session_summary, dict):
         session_summary = {}
+
     conn = sqlite3.connect(DB_PATH)
     try:
         cur = conn.execute(
@@ -90,14 +132,36 @@ def save_session(created_at, collected_count, analyzed_count, elapsed_seconds,
         )
         session_id = cur.lastrowid
 
-        for art in articles:
+        for art in customer_articles:
             conn.execute(
                 """INSERT INTO articles
-                   (session_id, title, source, published, link,
-                    relevance_score, core_keywords, summary, business_insight)
-                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                   (session_id, analysis_type, tag, title, source, published, link,
+                    relevance_score, core_keywords, summary, business_insight, sales_insights)
+                   VALUES (?, 'customer', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                 (
                     session_id,
+                    art.get("company", ""),
+                    art.get("title", ""),
+                    art.get("source", ""),
+                    art.get("published", ""),
+                    art.get("link", "#"),
+                    art.get("relevance_score", 0),
+                    json.dumps(art.get("core_keywords", []), ensure_ascii=False),
+                    art.get("summary", ""),
+                    "",
+                    json.dumps(art.get("sales_insights", []), ensure_ascii=False),
+                ),
+            )
+
+        for art in material_articles:
+            conn.execute(
+                """INSERT INTO articles
+                   (session_id, analysis_type, tag, title, source, published, link,
+                    relevance_score, core_keywords, summary, business_insight, sales_insights)
+                   VALUES (?, 'material', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                (
+                    session_id,
+                    art.get("material", ""),
                     art.get("title", ""),
                     art.get("source", ""),
                     art.get("published", ""),
@@ -106,6 +170,7 @@ def save_session(created_at, collected_count, analyzed_count, elapsed_seconds,
                     json.dumps(art.get("core_keywords", []), ensure_ascii=False),
                     art.get("summary", ""),
                     art.get("business_insight", ""),
+                    json.dumps([], ensure_ascii=False),
                 ),
             )
 
@@ -132,11 +197,22 @@ def get_sessions():
                 top_kw = json.loads(r["top_keywords"] or "[]")
             except Exception:
                 pass
+
+            # 고객사/소재 분석 건수 별도 집계
+            counts = conn.execute(
+                """SELECT analysis_type, COUNT(*) as cnt
+                   FROM articles WHERE session_id=? GROUP BY analysis_type""",
+                (r["id"],)
+            ).fetchall()
+            type_counts = {c["analysis_type"]: c["cnt"] for c in counts}
+
             result.append({
                 "id": r["id"],
                 "created_at": r["created_at"],
                 "collected_count": r["collected_count"],
                 "analyzed_count": r["analyzed_count"],
+                "customer_count": type_counts.get("customer", 0),
+                "material_count": type_counts.get("material", 0),
                 "elapsed_seconds": r["elapsed_seconds"],
                 "market_trend": r["market_trend"],
                 "top_keywords": top_kw,
@@ -163,30 +239,37 @@ def get_session_detail(session_id):
         except Exception:
             pass
 
-        arts = conn.execute(
-            """SELECT * FROM articles WHERE session_id = ?
-               ORDER BY relevance_score DESC""",
-            (session_id,),
-        ).fetchall()
-
-        article_list = []
-        for a in arts:
-            kw = []
-            try:
-                kw = json.loads(a["core_keywords"] or "[]")
-            except Exception:
-                pass
-            article_list.append({
-                "id": a["id"],
-                "title": a["title"],
-                "source": a["source"],
-                "published": a["published"],
-                "link": a["link"],
-                "relevance_score": a["relevance_score"],
-                "core_keywords": kw,
-                "summary": a["summary"],
-                "business_insight": a["business_insight"],
-            })
+        def fetch_articles(atype):
+            rows = conn.execute(
+                """SELECT * FROM articles WHERE session_id=? AND analysis_type=?
+                   ORDER BY relevance_score DESC""",
+                (session_id, atype)
+            ).fetchall()
+            result = []
+            for a in rows:
+                kw, si = [], []
+                try:
+                    kw = json.loads(a["core_keywords"] or "[]")
+                except Exception:
+                    pass
+                try:
+                    si = json.loads(a["sales_insights"] or "[]")
+                except Exception:
+                    pass
+                result.append({
+                    "id": a["id"],
+                    "tag": a["tag"],
+                    "title": a["title"],
+                    "source": a["source"],
+                    "published": a["published"],
+                    "link": a["link"],
+                    "relevance_score": a["relevance_score"],
+                    "core_keywords": kw,
+                    "summary": a["summary"],
+                    "business_insight": a["business_insight"],
+                    "sales_insights": si,
+                })
+            return result
 
         return {
             "id": session["id"],
@@ -197,36 +280,15 @@ def get_session_detail(session_id):
             "market_trend": session["market_trend"],
             "top_keywords": top_kw,
             "key_insight": session["key_insight"],
-            "articles": article_list,
+            "customer_articles": fetch_articles("customer"),
+            "material_articles": fetch_articles("material"),
         }
     finally:
         conn.close()
 
 
-# ── 키워드 트렌드 조회 ──────────────────────────────────────────────
-def get_keyword_trend(limit=10):
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    try:
-        sessions = conn.execute(
-            "SELECT id, created_at, top_keywords FROM sessions ORDER BY id DESC LIMIT 10"
-        ).fetchall()
-
-        trend = []
-        for s in sessions:
-            kw = []
-            try:
-                kw = json.loads(s["top_keywords"] or "[]")
-            except Exception:
-                pass
-            trend.append({"created_at": s["created_at"], "keywords": kw})
-        return trend
-    finally:
-        conn.close()
-
-
 # ── 뉴스 수집 ──────────────────────────────────────────────────────
-def fetch_google_news(query: str, max_results: int = 8) -> list[dict]:
+def fetch_google_news(query: str, max_results: int = 6) -> list[dict]:
     try:
         encoded = requests.utils.quote(query)
         url = f"https://news.google.com/rss/search?q={encoded}&hl=en-US&gl=US&ceid=US:en"
@@ -237,7 +299,7 @@ def fetch_google_news(query: str, max_results: int = 8) -> list[dict]:
             if not title:
                 continue
             raw_summary = entry.get("summary", "")
-            clean_summary = BeautifulSoup(raw_summary, "html.parser").get_text()[:600]
+            clean_summary = BeautifulSoup(raw_summary, "html.parser").get_text()[:400]
             articles.append({
                 "title": title,
                 "link": entry.get("link", "#"),
@@ -251,10 +313,10 @@ def fetch_google_news(query: str, max_results: int = 8) -> list[dict]:
         return []
 
 
-def collect_all_articles() -> list[dict]:
+def collect_articles(queries: list[str]) -> list[dict]:
     all_articles: list[dict] = []
-    with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
-        futures = {executor.submit(fetch_google_news, q): q for q in SEARCH_QUERIES}
+    with concurrent.futures.ThreadPoolExecutor(max_workers=6) as executor:
+        futures = [executor.submit(fetch_google_news, q) for q in queries]
         for future in concurrent.futures.as_completed(futures):
             try:
                 all_articles.extend(future.result())
@@ -264,7 +326,7 @@ def collect_all_articles() -> list[dict]:
     seen: set[str] = set()
     unique: list[dict] = []
     for a in all_articles:
-        key = a["title"][:100].lower()
+        key = a["title"][:80].lower()
         if key not in seen:
             seen.add(key)
             unique.append(a)
@@ -272,105 +334,179 @@ def collect_all_articles() -> list[dict]:
 
 
 # ── Claude 분석 ────────────────────────────────────────────────────
-SYSTEM_PROMPT = """당신은 타이어 소재 산업 및 고기능성 합성고무(SSBR) 시장 동향 분석에 특화된 수석 AI 비즈니스 애널리스트입니다.
-당신의 목표는 글로벌 뉴스를 분석하여 '양말단 SSBR(Functionalized SSBR)'의 매출 확대와 차세대 제품 개발에 직결되는 핵심 인사이트를 도출하는 것입니다."""
 
-USER_PROMPT_TEMPLATE = """아래 기사 목록을 전부 분석하여 양말단 SSBR 비즈니스와의 연관성 점수를 매기고 모든 기사를 반환하십시오.
+# 고객사 분석 프롬프트
+CUSTOMER_SYSTEM = """당신은 LG화학 HPM 사업부의 타이어 고무 소재(SSBR) 영업 전략 전문가입니다.
+글로벌 타이어 회사의 동향을 분석하여 LG화학의 SSBR 소재 영업 기회를 발굴하는 것이 목표입니다."""
+
+CUSTOMER_PROMPT = """아래 기사들을 분석하여 각 기사가 어느 타이어 회사와 관련 있는지 파악하고,
+LG화학 HPM 사업부의 영업 인사이트 3가지를 도출하십시오.
+
+**대상 회사:** Hankook(한국타이어), Kumho(금호타이어), Nexen(넥센타이어),
+               Michelin, Bridgestone, Continental
 
 **연관성 점수 기준 (0~100점):**
-- 90~100점: 시장 니즈, 규제 동향, 경쟁 동향, 차세대 기술 중 2개 이상 직접 부합
-- 70~89점: 위 기준 중 1개 강하게 부합 (EV 타이어, Low Rolling Resistance, Wet Grip, 실리카 등)
-- 40~69점: SSBR 또는 타이어 소재 산업에 간접적으로 연관
-- 0~39점: 연관성 낮음 (일반 자동차, 제조업 등)
-
-**연관성 항목:**
-- 시장 니즈: 전기차(EV) 타이어, Low Rolling Resistance, Wet Grip, 내마모성 요구사항
-- 규제 동향: 유럽/북미 환경 규제, 탄소 배출 저감 정책, 타이어 라벨링 제도 강화
-- 경쟁 동향: 화학사의 SSBR 생산 능력 확대, 기능성 고무 신제품 개발 및 특허 출원
-- 차세대 기술: 실리카 친화성 향상, 폴리머 구조 제어, 양말단 기능화 기술 동향
+- 100점: 해당 회사가 SSBR·실리카 소재 채택·검토 직접 언급
+- 80점: 해당 회사의 EV·고성능 타이어 신제품 출시 또는 소재 투자
+- 60점: 해당 회사의 지속가능성·규제 대응·타이어 성능 전략
+- 40점: 해당 회사 일반 사업 동향 (시장점유율, 실적 등)
+- 20점 미만: 회사 언급 없거나 간접 연관 → 제외
 
 **분석 대상 기사 ({count}건):**
 {articles}
 
-**출력 형식 (JSON만 출력, 다른 텍스트 없음):**
+**출력 형식 (JSON만, 다른 텍스트 없음):**
 {{
   "session_summary": {{
-    "market_trend": "이번 분석에서 나타난 전반적인 시장 동향 2문장 요약 (한국어)",
-    "top_keywords": ["키워드1", "키워드2", "키워드3", "키워드4", "키워드5"],
-    "key_insight": "양말단 SSBR 비즈니스 관점 핵심 시사점 1문장 (한국어)"
+    "market_trend": "고객사 동향 전반 요약 2문장 (한국어)",
+    "key_insight": "HPM 사업부 핵심 영업 시사점 1문장 (한국어)"
   }},
   "articles": [
     {{
-      "title": "기사 원문 제목 (번역하지 말 것)",
+      "title": "기사 원문 제목 (번역 금지)",
       "source": "출처명",
       "relevance_score": 85,
-      "core_keywords": ["키워드1", "키워드2", "키워드3"],
-      "summary": "SSBR 비즈니스 관점의 핵심 내용 3문장 이내 요약 (한국어)",
-      "business_insight": "양말단 SSBR 매출 확대 또는 차세대 제품 개발 시사점과 HPM 사업부 대응 방안 2문장 이내 (한국어)"
+      "company": "Hankook",
+      "core_keywords": ["키워드1", "키워드2"],
+      "summary": "SSBR 영업 관점 요약 2문장 (한국어)",
+      "sales_insights": [
+        "영업 인사이트 1: 구체적 공략 포인트 (한국어)",
+        "영업 인사이트 2: 제안 방향 (한국어)",
+        "영업 인사이트 3: 대응 전략 (한국어)"
+      ]
     }}
   ]
 }}
 
-모든 기사를 빠짐없이 포함하십시오. 반드시 JSON 형식만 출력하십시오."""
+연관성 20점 미만 기사는 제외하십시오. 반드시 JSON만 출력하십시오."""
+
+# 소재 분석 프롬프트
+MATERIAL_SYSTEM = """당신은 LG화학 HPM 사업부의 합성고무 소재 시장 분석 전문가입니다.
+주요 타이어 소재의 시장 동향을 분석하여 LG화학의 소재별 비즈니스 전략에 활용할 인사이트를 도출합니다."""
+
+MATERIAL_PROMPT = """아래 기사들을 분석하여 각 기사가 어느 소재와 관련 있는지 파악하고,
+LG화학 HPM 사업부의 비즈니스 인사이트를 도출하십시오.
+
+**대상 소재:**
+- SSBR (Solution Styrene Butadiene Rubber): 양말단 기능화 SSBR, 핵심 제품
+- SBR (Emulsion SBR): SSBR 경쟁·대체 소재
+- NBR (Nitrile Butadiene Rubber): 산업용 고무, 인접 시장
+- BR (Butadiene Rubber): 타이어 트레드 혼합 소재
+- Silica: 실리카 컴파운드, SSBR 성능 발현 핵심 충전재
+- Bio-Rubber: 바이오 기반·친환경 고무, 차세대 소재
+
+**연관성 점수 기준 (0~100점):**
+- 100점: 소재 생산·채택·신기술·특허 직접 언급
+- 80점: 소재 수요 증가 요인 (EV 전환, 규제 강화, 성능 요구)
+- 60점: 소재 시장 규모·전망·가격 동향 보고서
+- 40점: 인접 소재·대체 기술 간접 언급
+- 20점 미만: 소재 무관 → 제외
+
+**분석 대상 기사 ({count}건):**
+{articles}
+
+**출력 형식 (JSON만, 다른 텍스트 없음):**
+{{
+  "session_summary": {{
+    "market_trend": "소재 시장 전반 동향 요약 2문장 (한국어)",
+    "key_insight": "HPM 사업부 소재 전략 핵심 시사점 1문장 (한국어)"
+  }},
+  "articles": [
+    {{
+      "title": "기사 원문 제목 (번역 금지)",
+      "source": "출처명",
+      "relevance_score": 85,
+      "material": "SSBR",
+      "core_keywords": ["키워드1", "키워드2"],
+      "summary": "소재 비즈니스 관점 요약 2문장 (한국어)",
+      "business_insight": "LG화학 HPM 사업부 대응 방안 2문장 (한국어)"
+    }}
+  ]
+}}
+
+연관성 20점 미만 기사는 제외하십시오. 반드시 JSON만 출력하십시오."""
 
 
-def analyze_with_claude(articles: list[dict]) -> dict:
+def _call_claude(system_prompt, user_prompt, max_tokens=8192):
     client = anthropic.Anthropic()
-
-    articles_text = "\n\n".join(
-        f"[{i+1}] 제목: {a['title']}\n출처: {a['source']}\n날짜: {a['published']}\n내용: {a['summary']}"
-        for i, a in enumerate(articles[:20])
-    )
-
-    prompt = USER_PROMPT_TEMPLATE.format(count=len(articles[:20]), articles=articles_text)
-
     max_retries = 3
     for attempt in range(max_retries):
         try:
             message = client.messages.create(
                 model="claude-sonnet-4-6",
-                max_tokens=16000,
-                system=SYSTEM_PROMPT,
-                messages=[{"role": "user", "content": prompt}],
+                max_tokens=max_tokens,
+                system=system_prompt,
+                messages=[{"role": "user", "content": user_prompt}],
             )
             break
         except anthropic.APIStatusError as e:
             if e.status_code == 529 and attempt < max_retries - 1:
-                wait = 10 * (attempt + 1)
-                print(f"[WARN] API 과부하 (529), {wait}초 후 재시도... ({attempt+1}/{max_retries})")
+                wait = 15 * (attempt + 1)
+                print(f"[WARN] API 과부하(529), {wait}초 후 재시도 ({attempt+1}/{max_retries})")
                 time.sleep(wait)
             else:
                 raise
 
-    response_text = message.content[0].text.strip()
-    print(f"[DEBUG] Claude 응답 길이: {len(response_text)}자, stop_reason: {message.stop_reason}")
+    raw = message.content[0].text.strip()
+    print(f"[DEBUG] 응답 {len(raw)}자, stop_reason={message.stop_reason}")
 
-    response_text = re.sub(r"```(?:json)?\s*", "", response_text).strip()
-
-    start = response_text.find("{")
-    end = response_text.rfind("}") + 1
+    raw = re.sub(r"```(?:json)?\s*", "", raw).strip()
+    start = raw.find("{")
+    end = raw.rfind("}") + 1
     if start == -1 or end == 0:
-        print("[WARN] JSON 구조를 찾을 수 없음")
+        print("[WARN] JSON 구조 없음")
         return {"session_summary": {}, "articles": []}
 
     try:
-        parsed = json.loads(response_text[start:end])
-        print(f"[DEBUG] 파싱된 기사 수: {len(parsed.get('articles', []))}")
+        parsed = json.loads(raw[start:end])
+        print(f"[DEBUG] 파싱 기사 수: {len(parsed.get('articles', []))}")
+        return parsed
     except json.JSONDecodeError as e:
-        print(f"[WARN] JSON parse error: {e}")
-        print(f"[WARN] Raw response (앞 500자): {response_text[:500]}")
-        print(f"[WARN] Raw response (뒤 200자): {response_text[-200:]}")
+        print(f"[WARN] JSON 파싱 오류: {e}")
+        print(f"[WARN] 응답 앞 300자: {raw[:300]}")
+        print(f"[WARN] 응답 뒤 200자: {raw[-200:]}")
         return {"session_summary": {}, "articles": []}
 
-    # 원본 링크 및 날짜 재매핑
-    title_map = {a["title"][:100].lower(): a for a in articles}
-    for art in parsed.get("articles", []):
-        key = art.get("title", "")[:100].lower()
-        original = title_map.get(key, {})
-        art["link"] = original.get("link", "#")
-        art["published"] = original.get("published", "")
 
-    return parsed
+def analyze_customers(articles: list[dict]) -> dict:
+    # 토큰 안전: 기사당 입력 ~200자, 출력 ~500자 → 10건 = 약 5000토큰
+    batch = articles[:10]
+    articles_text = "\n\n".join(
+        f"[{i+1}] 제목: {a['title']}\n출처: {a['source']}\n날짜: {a['published']}\n내용: {a['summary']}"
+        for i, a in enumerate(batch)
+    )
+    prompt = CUSTOMER_PROMPT.format(count=len(batch), articles=articles_text)
+    result = _call_claude(CUSTOMER_SYSTEM, prompt, max_tokens=8192)
+
+    # 원본 링크 재매핑
+    title_map = {a["title"][:80].lower(): a for a in articles}
+    for art in result.get("articles", []):
+        key = art.get("title", "")[:80].lower()
+        orig = title_map.get(key, {})
+        art["link"] = orig.get("link", "#")
+        art["published"] = orig.get("published", "")
+
+    return result
+
+
+def analyze_materials(articles: list[dict]) -> dict:
+    # 토큰 안전: 10건 = 약 4000토큰 출력
+    batch = articles[:10]
+    articles_text = "\n\n".join(
+        f"[{i+1}] 제목: {a['title']}\n출처: {a['source']}\n날짜: {a['published']}\n내용: {a['summary']}"
+        for i, a in enumerate(batch)
+    )
+    prompt = MATERIAL_PROMPT.format(count=len(batch), articles=articles_text)
+    result = _call_claude(MATERIAL_SYSTEM, prompt, max_tokens=8192)
+
+    title_map = {a["title"][:80].lower(): a for a in articles}
+    for art in result.get("articles", []):
+        key = art.get("title", "")[:80].lower()
+        orig = title_map.get(key, {})
+        art["link"] = orig.get("link", "#")
+        art["published"] = orig.get("published", "")
+
+    return result
 
 
 # ── 라우트 ──────────────────────────────────────────────────────────
@@ -385,33 +521,59 @@ def collect():
         t0 = time.time()
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-        articles = collect_all_articles()
-        collected_count = len(articles)
+        # 고객사/소재 기사 병렬 수집
+        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as ex:
+            f_cust = ex.submit(collect_articles, CUSTOMER_QUERIES)
+            f_mat  = ex.submit(collect_articles, MATERIAL_QUERIES)
+            customer_raw = f_cust.result()
+            material_raw = f_mat.result()
 
-        if not articles:
+        collected_count = len(customer_raw) + len(material_raw)
+        print(f"[INFO] 고객사 수집 {len(customer_raw)}건, 소재 수집 {len(material_raw)}건")
+
+        if not customer_raw and not material_raw:
             return jsonify({"error": "뉴스를 수집할 수 없습니다. 네트워크 상태를 확인하세요."}), 503
 
-        result = analyze_with_claude(articles)
-        filtered = result.get("articles", [])
-        session_summary = result.get("session_summary", {})
+        # 고객사/소재 Claude 분석 병렬 실행
+        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as ex:
+            f_ca = ex.submit(analyze_customers, customer_raw)
+            f_ma = ex.submit(analyze_materials, material_raw)
+            customer_result = f_ca.result()
+            material_result = f_ma.result()
+
+        customer_articles = customer_result.get("articles", [])
+        material_articles = material_result.get("articles", [])
+
+        # 세션 요약 병합
+        session_summary = {
+            "market_trend": customer_result.get("session_summary", {}).get("market_trend", ""),
+            "key_insight": material_result.get("session_summary", {}).get("key_insight", ""),
+            "top_keywords": [],
+        }
+
         elapsed = round(time.time() - t0, 1)
+        analyzed_count = len(customer_articles) + len(material_articles)
 
         session_id = save_session(
             created_at=now,
             collected_count=collected_count,
-            analyzed_count=len(filtered),
+            analyzed_count=analyzed_count,
             elapsed_seconds=elapsed,
             session_summary=session_summary,
-            articles=filtered,
+            customer_articles=customer_articles,
+            material_articles=material_articles,
         )
 
         return jsonify({
             "session_id": session_id,
-            "articles": filtered,
-            "session_summary": session_summary,
+            "customer_articles": customer_articles,
+            "customer_summary": customer_result.get("session_summary", {}),
+            "material_articles": material_articles,
+            "material_summary": material_result.get("session_summary", {}),
             "stats": {
                 "collected": collected_count,
-                "filtered": len(filtered),
+                "customer_count": len(customer_articles),
+                "material_count": len(material_articles),
                 "elapsed": elapsed,
                 "timestamp": now,
             },
@@ -421,15 +583,14 @@ def collect():
         import traceback
         traceback.print_exc()
         if isinstance(e, anthropic.AuthenticationError):
-            return jsonify({"error": "Anthropic API 키가 유효하지 않습니다. .env 파일의 ANTHROPIC_API_KEY를 확인하세요."}), 401
+            return jsonify({"error": "API 키가 유효하지 않습니다."}), 401
         return jsonify({"error": f"서버 오류: {str(e)}"}), 500
 
 
 @app.route("/api/history", methods=["GET"])
 def history():
     try:
-        sessions = get_sessions()
-        return jsonify({"sessions": sessions})
+        return jsonify({"sessions": get_sessions()})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -456,6 +617,12 @@ def history_delete(session_id):
         return jsonify({"ok": True})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+# ── 고객사/소재 메타 정보 API ──────────────────────────────────────
+@app.route("/api/meta", methods=["GET"])
+def meta():
+    return jsonify({"customers": CUSTOMERS, "materials": MATERIALS})
 
 
 # gunicorn 등 외부 실행 환경에서도 DB 초기화 보장

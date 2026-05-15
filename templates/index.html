@@ -8,718 +8,723 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
   <style>
     body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
+    .hero-gradient { background: linear-gradient(135deg, #0a1628 0%, #0f2d5e 45%, #102545 100%); }
 
-    .hero-gradient {
-      background: linear-gradient(135deg, #0a1628 0%, #0f2d5e 45%, #102545 100%);
-    }
+    .card-hover { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+    .card-hover:hover { transform: translateY(-3px); box-shadow: 0 12px 40px rgba(0,0,0,.12); }
 
-    .card-hover {
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-    .card-hover:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
-    }
+    .keyword-chip { background: linear-gradient(135deg,#eff6ff,#dbeafe); border:1px solid #bfdbfe; color:#1d4ed8; }
+    .keyword-chip-trend { background: linear-gradient(135deg,#f0fdf4,#dcfce7); border:1px solid #bbf7d0; color:#15803d; }
 
-    .score-badge-high { background: linear-gradient(135deg, #059669, #10b981); }
-    .score-badge-mid  { background: linear-gradient(135deg, #d97706, #f59e0b); }
-    .score-badge-low  { background: linear-gradient(135deg, #64748b, #94a3b8); }
+    .score-badge-high { background: linear-gradient(135deg,#059669,#10b981); }
+    .score-badge-mid  { background: linear-gradient(135deg,#d97706,#f59e0b); }
+    .score-badge-low  { background: linear-gradient(135deg,#64748b,#94a3b8); }
 
-    .keyword-chip {
-      background: linear-gradient(135deg, #eff6ff, #dbeafe);
-      border: 1px solid #bfdbfe;
-      color: #1d4ed8;
-    }
-
-    .keyword-chip-trend {
-      background: linear-gradient(135deg, #f0fdf4, #dcfce7);
-      border: 1px solid #bbf7d0;
-      color: #15803d;
-    }
-
-    @keyframes spin-slow { to { transform: rotate(360deg); } }
+    @keyframes spin-slow { to { transform:rotate(360deg); } }
     .spin-slow { animation: spin-slow 1.5s linear infinite; }
 
-    @keyframes fadeInUp {
-      from { opacity: 0; transform: translateY(16px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
+    @keyframes fadeInUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
     .fade-in-up { animation: fadeInUp 0.4s ease forwards; }
 
-    .stat-card {
-      background: rgba(255,255,255,0.08);
-      border: 1px solid rgba(255,255,255,0.12);
-      backdrop-filter: blur(8px);
-    }
+    .stat-card { background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.12); backdrop-filter:blur(8px); }
 
-    .insight-box {
-      background: linear-gradient(135deg, #fefce8, #fef9c3);
-      border-left: 3px solid #eab308;
-    }
-    .summary-box {
-      background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
-      border-left: 3px solid #0284c7;
-    }
-    .trend-box {
-      background: linear-gradient(135deg, #f0fdf4, #dcfce7);
-      border-left: 3px solid #16a34a;
-    }
+    .insight-box { background:linear-gradient(135deg,#fefce8,#fef9c3); border-left:3px solid #eab308; }
+    .summary-box { background:linear-gradient(135deg,#f0f9ff,#e0f2fe); border-left:3px solid #0284c7; }
+    .sales-box   { background:linear-gradient(135deg,#fdf4ff,#fae8ff); border-left:3px solid #a855f7; }
+    .trend-box   { background:linear-gradient(135deg,#f0fdf4,#dcfce7); border-left:3px solid #16a34a; }
 
-    .shimmer {
-      background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
-      background-size: 200% 100%;
-      animation: shimmer 1.5s infinite;
-    }
-    @keyframes shimmer {
-      0%   { background-position: 200% 0; }
-      100% { background-position: -200% 0; }
-    }
+    .shimmer { background:linear-gradient(90deg,#f1f5f9 25%,#e2e8f0 50%,#f1f5f9 75%); background-size:200% 100%; animation:shimmer 1.5s infinite; }
+    @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
 
-    .tab-btn { transition: all 0.2s ease; }
-    .tab-btn.active {
-      background: rgba(255,255,255,0.15);
-      border-bottom: 2px solid #60a5fa;
-      color: #93c5fd;
-    }
-    .tab-btn:not(.active) { color: #94a3b8; }
-    .tab-btn:not(.active):hover { color: #cbd5e1; }
+    /* 메인 탭 */
+    .main-tab-btn { transition:all .2s ease; border-bottom:2px solid transparent; }
+    .main-tab-btn.active { background:rgba(255,255,255,.15); border-bottom-color:#60a5fa; color:#93c5fd; }
+    .main-tab-btn:not(.active) { color:#94a3b8; }
+    .main-tab-btn:not(.active):hover { color:#cbd5e1; }
 
-    .history-row {
-      transition: background 0.15s ease;
-      cursor: pointer;
-    }
-    .history-row:hover { background: #f1f5f9; }
+    /* 서브 탭 (분석 내부) */
+    .sub-tab-btn { transition:all .15s ease; }
+    .sub-tab-btn.active { background:#1e40af; color:#fff; box-shadow:0 2px 8px rgba(30,64,175,.3); }
+    .sub-tab-btn:not(.active) { background:#e2e8f0; color:#475569; }
+    .sub-tab-btn:not(.active):hover { background:#cbd5e1; }
 
-    /* 모달 */
-    .modal-backdrop {
-      background: rgba(0,0,0,0.5);
-      backdrop-filter: blur(4px);
-    }
+    /* 이력 */
+    .history-row { transition:background .15s ease; cursor:pointer; }
+    .history-row:hover { background:#f1f5f9; }
 
-    ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-track { background: #f1f5f9; }
-    ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 3px; }
+    .modal-backdrop { background:rgba(0,0,0,.5); backdrop-filter:blur(4px); }
+    .modal-tab-btn { transition:all .15s ease; border-bottom:2px solid transparent; }
+    .modal-tab-btn.active { color:#1d4ed8; border-bottom-color:#3b82f6; }
+    .modal-tab-btn:not(.active) { color:#94a3b8; }
+
+    ::-webkit-scrollbar { width:6px; }
+    ::-webkit-scrollbar-track { background:#f1f5f9; }
+    ::-webkit-scrollbar-thumb { background:#94a3b8; border-radius:3px; }
   </style>
 </head>
 <body class="bg-slate-100 min-h-screen">
 
-  <!-- ══ HEADER ══════════════════════════════════════════════════════ -->
-  <header class="hero-gradient text-white shadow-2xl">
-    <div class="max-w-7xl mx-auto px-6 py-6">
-      <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-
-        <div>
-          <div class="flex items-center gap-3 mb-1">
-            <div class="w-9 h-9 bg-blue-500/30 rounded-lg flex items-center justify-center">
-              <i class="fas fa-atom text-blue-300 text-lg"></i>
-            </div>
-            <h1 class="text-xl md:text-2xl font-bold tracking-tight">SSBR 뉴스 인텔리전스</h1>
-            <span class="hidden sm:inline bg-blue-500/25 text-blue-200 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-blue-400/30">
-              AI POWERED
-            </span>
+<!-- ══ HEADER ══════════════════════════════════════════════════════ -->
+<header class="hero-gradient text-white shadow-2xl">
+  <div class="max-w-7xl mx-auto px-6 py-6">
+    <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+      <div>
+        <div class="flex items-center gap-3 mb-1">
+          <div class="w-9 h-9 bg-blue-500/30 rounded-lg flex items-center justify-center">
+            <i class="fas fa-atom text-blue-300 text-lg"></i>
           </div>
-          <p class="text-slate-400 text-sm ml-12">
-            양말단 SSBR 비즈니스 관련 글로벌 뉴스 자동 수집 &amp; AI 선별 분석 대시보드
-          </p>
+          <h1 class="text-xl md:text-2xl font-bold tracking-tight">SSBR 뉴스 인텔리전스</h1>
+          <span class="hidden sm:inline bg-blue-500/25 text-blue-200 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-blue-400/30">AI POWERED</span>
         </div>
-
-        <button
-          id="collectBtn"
-          onclick="collectNews()"
-          class="flex items-center gap-2.5 bg-blue-600 hover:bg-blue-500 active:bg-blue-700
-                 text-white font-semibold px-5 py-2.5 rounded-xl shadow-lg
-                 transition-all duration-200 whitespace-nowrap select-none"
-        >
-          <i id="btnIcon" class="fas fa-satellite-dish text-sm"></i>
-          <span id="btnText">뉴스 수집 및 분석</span>
-        </button>
+        <p class="text-slate-400 text-sm ml-12">양말단 SSBR 비즈니스 관련 글로벌 뉴스 자동 수집 &amp; AI 선별 분석 대시보드</p>
       </div>
+      <button id="collectBtn" onclick="collectNews()"
+        class="flex items-center gap-2.5 bg-blue-600 hover:bg-blue-500 active:bg-blue-700
+               text-white font-semibold px-5 py-2.5 rounded-xl shadow-lg transition-all duration-200 whitespace-nowrap select-none">
+        <i id="btnIcon" class="fas fa-satellite-dish text-sm"></i>
+        <span id="btnText">뉴스 수집 및 분석</span>
+      </button>
+    </div>
 
-      <!-- 통계 바 -->
-      <div id="statsBar" class="hidden mt-5 grid grid-cols-2 md:grid-cols-4 gap-3">
-        <div class="stat-card rounded-xl px-4 py-3">
-          <p class="text-slate-400 text-xs mb-0.5">수집된 기사</p>
-          <p class="text-white text-xl font-bold" id="statCollected">—</p>
-        </div>
-        <div class="stat-card rounded-xl px-4 py-3">
-          <p class="text-slate-400 text-xs mb-0.5">분석된 기사 (전체)</p>
-          <p class="text-emerald-400 text-xl font-bold" id="statFiltered">—</p>
-        </div>
-        <div class="stat-card rounded-xl px-4 py-3">
-          <p class="text-slate-400 text-xs mb-0.5">분석 소요 시간</p>
-          <p class="text-blue-300 text-xl font-bold" id="statElapsed">—</p>
-        </div>
-        <div class="stat-card rounded-xl px-4 py-3">
-          <p class="text-slate-400 text-xs mb-0.5">마지막 수집</p>
-          <p class="text-slate-200 text-sm font-semibold mt-0.5" id="statTimestamp">—</p>
-        </div>
+    <!-- 통계 바 -->
+    <div id="statsBar" class="hidden mt-5 grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div class="stat-card rounded-xl px-4 py-3">
+        <p class="text-slate-400 text-xs mb-0.5">수집된 기사</p>
+        <p class="text-white text-xl font-bold" id="statCollected">—</p>
       </div>
-
-      <!-- 탭 -->
-      <div class="flex gap-1 mt-5 border-b border-white/10">
-        <button class="tab-btn active px-4 py-2 text-sm font-medium rounded-t-lg" onclick="switchTab('analysis', this)">
-          <i class="fas fa-chart-bar mr-1.5"></i>최신 분석
-        </button>
-        <button class="tab-btn px-4 py-2 text-sm font-medium rounded-t-lg" onclick="switchTab('history', this)">
-          <i class="fas fa-clock-rotate-left mr-1.5"></i>분석 이력
-        </button>
+      <div class="stat-card rounded-xl px-4 py-3">
+        <p class="text-slate-400 text-xs mb-0.5">고객사 분석</p>
+        <p class="text-emerald-400 text-xl font-bold" id="statCustomer">—</p>
+      </div>
+      <div class="stat-card rounded-xl px-4 py-3">
+        <p class="text-slate-400 text-xs mb-0.5">소재 분석</p>
+        <p class="text-purple-300 text-xl font-bold" id="statMaterial">—</p>
+      </div>
+      <div class="stat-card rounded-xl px-4 py-3">
+        <p class="text-slate-400 text-xs mb-0.5">소요시간 / 마지막 수집</p>
+        <p class="text-slate-200 text-xs font-semibold mt-0.5">
+          <span id="statElapsed">—</span> · <span id="statTimestamp">—</span>
+        </p>
       </div>
     </div>
-  </header>
 
-  <!-- ══ MAIN ════════════════════════════════════════════════════════ -->
-  <main class="max-w-7xl mx-auto px-6 py-8">
-
-    <!-- ── 최신 분석 탭 ──────────────────────────────────────────── -->
-    <div id="tabAnalysis">
-
-      <!-- 초기 안내 -->
-      <div id="emptyState" class="flex flex-col items-center justify-center py-20 text-center">
-        <div class="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mb-5">
-          <i class="fas fa-newspaper text-blue-400 text-3xl"></i>
-        </div>
-        <h2 class="text-xl font-semibold text-slate-700 mb-2">분석 준비 완료</h2>
-        <p class="text-slate-500 max-w-sm text-sm leading-relaxed">
-          상단의 <strong class="text-slate-700">뉴스 수집 및 분석</strong> 버튼을 클릭하면
-          글로벌 뉴스를 수집하고 AI가 양말단 SSBR 연관 기사를 자동으로 분석합니다.
-        </p>
-        <div class="mt-6 flex flex-wrap justify-center gap-2">
-          <span class="bg-white border border-slate-200 text-slate-600 text-xs px-3 py-1.5 rounded-full shadow-sm">
-            <i class="fas fa-globe text-blue-400 mr-1"></i> Google News 다중 쿼리
-          </span>
-          <span class="bg-white border border-slate-200 text-slate-600 text-xs px-3 py-1.5 rounded-full shadow-sm">
-            <i class="fas fa-brain text-purple-400 mr-1"></i> Claude AI 연관성 점수 분석
-          </span>
-          <span class="bg-white border border-slate-200 text-slate-600 text-xs px-3 py-1.5 rounded-full shadow-sm">
-            <i class="fas fa-lightbulb text-yellow-400 mr-1"></i> 비즈니스 인사이트 자동 생성
-          </span>
-        </div>
-      </div>
-
-      <!-- 로딩 -->
-      <div id="loadingState" class="hidden">
-        <div class="flex flex-col items-center py-16">
-          <div class="relative mb-6">
-            <div class="w-16 h-16 border-4 border-blue-100 rounded-full"></div>
-            <div class="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full spin-slow absolute inset-0"></div>
-          </div>
-          <p class="text-slate-700 font-semibold text-lg mb-1">뉴스 수집 및 분석 중...</p>
-          <p class="text-slate-400 text-sm">글로벌 뉴스 소스에서 SSBR 관련 기사를 수집하고 AI가 분석 중입니다</p>
-        </div>
-        <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-5 mt-4">
-          <div class="bg-white rounded-2xl p-5 shadow-sm">
-            <div class="shimmer h-4 w-3/4 rounded mb-3"></div>
-            <div class="shimmer h-3 w-1/3 rounded mb-4"></div>
-            <div class="shimmer h-20 rounded mb-3"></div>
-            <div class="shimmer h-16 rounded"></div>
-          </div>
-          <div class="bg-white rounded-2xl p-5 shadow-sm hidden lg:block">
-            <div class="shimmer h-4 w-2/3 rounded mb-3"></div>
-            <div class="shimmer h-3 w-1/2 rounded mb-4"></div>
-            <div class="shimmer h-20 rounded mb-3"></div>
-            <div class="shimmer h-16 rounded"></div>
-          </div>
-          <div class="bg-white rounded-2xl p-5 shadow-sm hidden xl:block">
-            <div class="shimmer h-4 w-4/5 rounded mb-3"></div>
-            <div class="shimmer h-3 w-1/3 rounded mb-4"></div>
-            <div class="shimmer h-20 rounded mb-3"></div>
-            <div class="shimmer h-16 rounded"></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 오류 -->
-      <div id="errorState" class="hidden flex flex-col items-center py-16 text-center">
-        <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
-          <i class="fas fa-triangle-exclamation text-red-500 text-2xl"></i>
-        </div>
-        <h3 class="text-lg font-semibold text-slate-700 mb-1">오류가 발생했습니다</h3>
-        <p id="errorMsg" class="text-slate-500 text-sm max-w-md"></p>
-        <button onclick="collectNews()"
-          class="mt-5 bg-red-600 hover:bg-red-500 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors">
-          <i class="fas fa-rotate-right mr-2"></i>재시도
-        </button>
-      </div>
-
-      <!-- 빈 결과 -->
-      <div id="noResultState" class="hidden flex flex-col items-center py-16 text-center">
-        <div class="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mb-4">
-          <i class="fas fa-filter text-amber-500 text-2xl"></i>
-        </div>
-        <h3 class="text-lg font-semibold text-slate-700 mb-1">분석된 기사 없음</h3>
-        <p class="text-slate-500 text-sm max-w-sm">수집된 기사가 없습니다. 잠시 후 다시 시도하세요.</p>
-      </div>
-
-      <!-- 세션 요약 -->
-      <div id="sessionSummaryBox" class="hidden mb-6 bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
-        <h3 class="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
-          <i class="fas fa-chart-line text-green-500"></i> 이번 분석 요약
-        </h3>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div class="trend-box rounded-xl p-3.5">
-            <p class="text-xs font-semibold text-green-700 mb-1.5 flex items-center gap-1">
-              <i class="fas fa-globe"></i> 시장 동향
-            </p>
-            <p id="summaryMarketTrend" class="text-slate-700 text-xs leading-relaxed"></p>
-          </div>
-          <div class="insight-box rounded-xl p-3.5">
-            <p class="text-xs font-semibold text-yellow-700 mb-1.5 flex items-center gap-1">
-              <i class="fas fa-lightbulb"></i> 핵심 시사점
-            </p>
-            <p id="summaryKeyInsight" class="text-slate-700 text-xs leading-relaxed"></p>
-          </div>
-        </div>
-        <div class="mt-3">
-          <p class="text-xs font-semibold text-slate-500 mb-2">주요 키워드</p>
-          <div id="summaryKeywords" class="flex flex-wrap gap-1.5"></div>
-        </div>
-      </div>
-
-      <!-- 기사 그리드 -->
-      <div id="articlesGrid" class="hidden grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-5"></div>
-
-    </div><!-- /tabAnalysis -->
-
-    <!-- ── 분석 이력 탭 ──────────────────────────────────────────── -->
-    <div id="tabHistory" class="hidden">
-
-      <!-- 키워드 트렌드 -->
-      <div id="keywordTrendBox" class="hidden mb-6 bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
-        <h3 class="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
-          <i class="fas fa-tags text-blue-500"></i> 키워드 트렌드 (최근 10회)
-        </h3>
-        <div id="keywordTrendList" class="space-y-2"></div>
-      </div>
-
-      <!-- 이력 목록 -->
-      <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-        <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
-          <h3 class="text-sm font-semibold text-slate-700 flex items-center gap-2">
-            <i class="fas fa-clock-rotate-left text-slate-400"></i> 분석 이력 목록
-          </h3>
-          <span id="historyCount" class="text-xs text-slate-400"></span>
-        </div>
-
-        <div id="historyEmpty" class="hidden py-16 text-center">
-          <i class="fas fa-inbox text-slate-300 text-3xl mb-3"></i>
-          <p class="text-slate-400 text-sm">저장된 분석 이력이 없습니다.</p>
-          <p class="text-slate-300 text-xs mt-1">뉴스 수집 및 분석을 실행하면 자동으로 저장됩니다.</p>
-        </div>
-
-        <div id="historyLoading" class="py-10 text-center">
-          <div class="inline-block w-6 h-6 border-2 border-blue-400 border-t-transparent rounded-full spin-slow"></div>
-        </div>
-
-        <div id="historyTable" class="hidden overflow-x-auto">
-          <table class="w-full text-sm">
-            <thead class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wide">
-              <tr>
-                <th class="px-5 py-3 text-left">분석 일시</th>
-                <th class="px-4 py-3 text-center">수집</th>
-                <th class="px-4 py-3 text-center">분석</th>
-                <th class="px-4 py-3 text-center">소요</th>
-                <th class="px-4 py-3 text-left">주요 키워드</th>
-                <th class="px-4 py-3 text-left">시장 동향 요약</th>
-                <th class="px-4 py-3 text-center">관리</th>
-              </tr>
-            </thead>
-            <tbody id="historyTbody" class="divide-y divide-slate-100"></tbody>
-          </table>
-        </div>
-      </div>
-
-    </div><!-- /tabHistory -->
-
-  </main>
-
-  <!-- ══ 기사 카드 템플릿 ═══════════════════════════════════════════ -->
-  <template id="articleCardTpl">
-    <article class="bg-white rounded-2xl shadow-sm card-hover overflow-hidden border border-slate-100 fade-in-up">
-      <div class="score-bar h-1.5"></div>
-      <div class="p-5">
-        <div class="flex items-start justify-between gap-3 mb-3">
-          <div class="flex items-center gap-2 flex-wrap">
-            <span class="score-badge text-white text-sm font-bold px-3 py-1 rounded-full shadow-sm">
-              <i class="fas fa-star text-xs mr-1"></i><span class="score-text"></span>
-            </span>
-            <span class="text-slate-500 text-xs flex items-center gap-1">
-              <i class="fas fa-building text-slate-300 text-xs"></i>
-              <span class="source-text"></span>
-            </span>
-          </div>
-          <span class="date-text text-slate-400 text-xs whitespace-nowrap mt-1"></span>
-        </div>
-        <a class="article-link block hover:text-blue-600 transition-colors" target="_blank" rel="noopener">
-          <h3 class="title-text font-semibold text-slate-800 text-sm leading-snug mb-3 line-clamp-3 hover:underline"></h3>
-        </a>
-        <div class="keywords-wrap flex flex-wrap gap-1.5 mb-3"></div>
-        <div class="summary-box rounded-xl p-3.5 mb-3">
-          <p class="text-xs font-semibold text-sky-700 mb-1.5 flex items-center gap-1">
-            <i class="fas fa-align-left"></i> AI 요약
-          </p>
-          <p class="summary-text text-slate-700 text-xs leading-relaxed"></p>
-        </div>
-        <div class="insight-box rounded-xl p-3.5">
-          <p class="text-xs font-semibold text-yellow-700 mb-1.5 flex items-center gap-1">
-            <i class="fas fa-lightbulb"></i> 비즈니스 인사이트
-          </p>
-          <p class="insight-text text-slate-700 text-xs leading-relaxed"></p>
-        </div>
-      </div>
-    </article>
-  </template>
-
-  <!-- ══ 이력 상세 모달 ════════════════════════════════════════════ -->
-  <div id="historyModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
-    <div class="modal-backdrop absolute inset-0" onclick="closeModal()"></div>
-    <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col">
-      <!-- 모달 헤더 -->
-      <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100">
-        <div>
-          <h2 class="font-bold text-slate-800 text-base" id="modalTitle">분석 이력 상세</h2>
-          <p class="text-xs text-slate-400 mt-0.5" id="modalSubtitle"></p>
-        </div>
-        <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 transition-colors">
-          <i class="fas fa-xmark text-xl"></i>
-        </button>
-      </div>
-      <!-- 모달 세션 요약 -->
-      <div id="modalSummary" class="px-6 py-4 bg-slate-50 border-b border-slate-100">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
-          <div class="trend-box rounded-xl p-3">
-            <p class="text-xs font-semibold text-green-700 mb-1"><i class="fas fa-globe mr-1"></i>시장 동향</p>
-            <p id="modalMarketTrend" class="text-slate-700 text-xs leading-relaxed"></p>
-          </div>
-          <div class="insight-box rounded-xl p-3">
-            <p class="text-xs font-semibold text-yellow-700 mb-1"><i class="fas fa-lightbulb mr-1"></i>핵심 시사점</p>
-            <p id="modalKeyInsight" class="text-slate-700 text-xs leading-relaxed"></p>
-          </div>
-        </div>
-        <div id="modalKeywords" class="flex flex-wrap gap-1.5"></div>
-      </div>
-      <!-- 모달 기사 목록 -->
-      <div class="overflow-y-auto flex-1 px-6 py-4">
-        <div id="modalArticleGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
-      </div>
+    <!-- 메인 탭 -->
+    <div class="flex gap-1 mt-5 border-b border-white/10">
+      <button class="main-tab-btn active px-4 py-2 text-sm font-medium rounded-t-lg" onclick="switchMainTab('analysis', this)">
+        <i class="fas fa-chart-bar mr-1.5"></i>최신 분석
+      </button>
+      <button class="main-tab-btn px-4 py-2 text-sm font-medium rounded-t-lg" onclick="switchMainTab('history', this)">
+        <i class="fas fa-clock-rotate-left mr-1.5"></i>분석 이력
+      </button>
     </div>
   </div>
+</header>
 
-  <script>
-    /* ── 유틸 ──────────────────────────────────────────────────── */
-    const $ = id => document.getElementById(id);
+<!-- ══ MAIN ════════════════════════════════════════════════════════ -->
+<main class="max-w-7xl mx-auto px-6 py-8">
 
-    function show(id) { $(id).classList.remove('hidden'); }
-    function hide(id) { $(id).classList.add('hidden'); }
+  <!-- ── 최신 분석 탭 ──────────────────────────────────────────── -->
+  <div id="tabAnalysis">
 
-    function hideAnalysisStates() {
-      ['emptyState','loadingState','errorState','noResultState','sessionSummaryBox','articlesGrid'].forEach(hide);
-    }
+    <!-- 초기 안내 -->
+    <div id="emptyState" class="flex flex-col items-center justify-center py-20 text-center">
+      <div class="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mb-5">
+        <i class="fas fa-newspaper text-blue-400 text-3xl"></i>
+      </div>
+      <h2 class="text-xl font-semibold text-slate-700 mb-2">분석 준비 완료</h2>
+      <p class="text-slate-500 max-w-sm text-sm leading-relaxed">
+        <strong class="text-slate-700">뉴스 수집 및 분석</strong> 버튼을 클릭하면<br>
+        고객사별·소재별 AI 분석이 동시에 실행됩니다.
+      </p>
+      <div class="mt-6 flex flex-wrap justify-center gap-2">
+        <span class="bg-white border border-slate-200 text-slate-600 text-xs px-3 py-1.5 rounded-full shadow-sm">
+          <i class="fas fa-users text-blue-400 mr-1"></i> 주요 고객사 6개사 분석
+        </span>
+        <span class="bg-white border border-slate-200 text-slate-600 text-xs px-3 py-1.5 rounded-full shadow-sm">
+          <i class="fas fa-flask text-purple-400 mr-1"></i> 소재 6종 시장 분석
+        </span>
+        <span class="bg-white border border-slate-200 text-slate-600 text-xs px-3 py-1.5 rounded-full shadow-sm">
+          <i class="fas fa-lightbulb text-yellow-400 mr-1"></i> HPM 영업 인사이트 자동 생성
+        </span>
+      </div>
+    </div>
 
-    function formatDate(str) {
-      if (!str) return '';
-      try {
-        return new Date(str).toLocaleDateString('ko-KR', { year:'numeric', month:'2-digit', day:'2-digit' });
-      } catch { return str.slice(0, 10); }
-    }
+    <!-- 로딩 -->
+    <div id="loadingState" class="hidden">
+      <div class="flex flex-col items-center py-12">
+        <div class="relative mb-5">
+          <div class="w-14 h-14 border-4 border-blue-100 rounded-full"></div>
+          <div class="w-14 h-14 border-4 border-blue-600 border-t-transparent rounded-full spin-slow absolute inset-0"></div>
+        </div>
+        <p class="text-slate-700 font-semibold text-base mb-1">고객사 · 소재 동시 분석 중...</p>
+        <p class="text-slate-400 text-sm">Claude AI가 두 가지 분석을 병렬로 처리하고 있습니다</p>
+      </div>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 mt-2">
+        <div class="bg-white rounded-2xl p-5 shadow-sm">
+          <div class="shimmer h-4 w-2/3 rounded mb-3"></div>
+          <div class="shimmer h-3 w-1/3 rounded mb-4"></div>
+          <div class="shimmer h-16 rounded mb-3"></div>
+          <div class="shimmer h-20 rounded"></div>
+        </div>
+        <div class="bg-white rounded-2xl p-5 shadow-sm hidden lg:block">
+          <div class="shimmer h-4 w-3/4 rounded mb-3"></div>
+          <div class="shimmer h-3 w-1/2 rounded mb-4"></div>
+          <div class="shimmer h-16 rounded mb-3"></div>
+          <div class="shimmer h-20 rounded"></div>
+        </div>
+      </div>
+    </div>
 
-    function scoreStyle(score) {
-      if (score >= 80) return { bar: '#10b981', badge: 'score-badge-high' };
-      if (score >= 40) return { bar: '#f59e0b', badge: 'score-badge-mid' };
-      return { bar: '#94a3b8', badge: 'score-badge-low' };
-    }
+    <!-- 오류 -->
+    <div id="errorState" class="hidden flex flex-col items-center py-16 text-center">
+      <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
+        <i class="fas fa-triangle-exclamation text-red-500 text-2xl"></i>
+      </div>
+      <h3 class="text-lg font-semibold text-slate-700 mb-1">오류가 발생했습니다</h3>
+      <p id="errorMsg" class="text-slate-500 text-sm max-w-md"></p>
+      <button onclick="collectNews()"
+        class="mt-5 bg-red-600 hover:bg-red-500 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors">
+        <i class="fas fa-rotate-right mr-2"></i>재시도
+      </button>
+    </div>
 
-    /* ── 탭 전환 ────────────────────────────────────────────── */
-    function switchTab(tab, btn) {
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
+    <!-- 분석 결과 영역 -->
+    <div id="resultArea" class="hidden">
 
-      if (tab === 'analysis') {
-        show('tabAnalysis');
-        hide('tabHistory');
-      } else {
-        hide('tabAnalysis');
-        show('tabHistory');
-        loadHistory();
+      <!-- 서브 탭 -->
+      <div class="flex gap-2 mb-6">
+        <button class="sub-tab-btn active px-5 py-2 text-sm font-semibold rounded-xl" onclick="switchSubTab('customer', this)">
+          <i class="fas fa-users mr-1.5"></i>주요 고객사 별 분석
+        </button>
+        <button class="sub-tab-btn px-5 py-2 text-sm font-semibold rounded-xl" onclick="switchSubTab('material', this)">
+          <i class="fas fa-flask mr-1.5"></i>소재 별 분석
+        </button>
+      </div>
+
+      <!-- 고객사 분석 패널 -->
+      <div id="panelCustomer">
+        <!-- 고객사 요약 -->
+        <div id="customerSummaryBox" class="mb-5 bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
+          <h3 class="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
+            <i class="fas fa-chart-line text-blue-500"></i> 고객사 동향 요약
+          </h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="trend-box rounded-xl p-3.5">
+              <p class="text-xs font-semibold text-green-700 mb-1"><i class="fas fa-globe mr-1"></i>시장 동향</p>
+              <p id="customerMarketTrend" class="text-slate-700 text-xs leading-relaxed"></p>
+            </div>
+            <div class="insight-box rounded-xl p-3.5">
+              <p class="text-xs font-semibold text-yellow-700 mb-1"><i class="fas fa-lightbulb mr-1"></i>핵심 시사점</p>
+              <p id="customerKeyInsight" class="text-slate-700 text-xs leading-relaxed"></p>
+            </div>
+          </div>
+        </div>
+        <!-- 고객사 기사 그리드 -->
+        <div id="customerGrid" class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-5"></div>
+        <div id="customerEmpty" class="hidden py-12 text-center text-slate-400 text-sm">
+          <i class="fas fa-filter text-2xl mb-2"></i><br>고객사 관련 기사가 없습니다.
+        </div>
+      </div>
+
+      <!-- 소재 분석 패널 -->
+      <div id="panelMaterial" class="hidden">
+        <!-- 소재 요약 -->
+        <div id="materialSummaryBox" class="mb-5 bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
+          <h3 class="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
+            <i class="fas fa-chart-line text-purple-500"></i> 소재 시장 동향 요약
+          </h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="trend-box rounded-xl p-3.5">
+              <p class="text-xs font-semibold text-green-700 mb-1"><i class="fas fa-globe mr-1"></i>시장 동향</p>
+              <p id="materialMarketTrend" class="text-slate-700 text-xs leading-relaxed"></p>
+            </div>
+            <div class="insight-box rounded-xl p-3.5">
+              <p class="text-xs font-semibold text-yellow-700 mb-1"><i class="fas fa-lightbulb mr-1"></i>핵심 시사점</p>
+              <p id="materialKeyInsight" class="text-slate-700 text-xs leading-relaxed"></p>
+            </div>
+          </div>
+        </div>
+        <!-- 소재 기사 그리드 -->
+        <div id="materialGrid" class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-5"></div>
+        <div id="materialEmpty" class="hidden py-12 text-center text-slate-400 text-sm">
+          <i class="fas fa-flask text-2xl mb-2"></i><br>소재 관련 기사가 없습니다.
+        </div>
+      </div>
+
+    </div><!-- /resultArea -->
+  </div><!-- /tabAnalysis -->
+
+  <!-- ── 분석 이력 탭 ──────────────────────────────────────────── -->
+  <div id="tabHistory" class="hidden">
+
+    <!-- 키워드 트렌드 -->
+    <div id="keywordTrendBox" class="hidden mb-6 bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
+      <h3 class="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
+        <i class="fas fa-tags text-blue-500"></i> 키워드 트렌드 (최근 10회)
+      </h3>
+      <div id="keywordTrendList" class="space-y-2"></div>
+    </div>
+
+    <!-- 이력 목록 -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+      <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+        <h3 class="text-sm font-semibold text-slate-700 flex items-center gap-2">
+          <i class="fas fa-clock-rotate-left text-slate-400"></i> 분석 이력 목록
+        </h3>
+        <span id="historyCount" class="text-xs text-slate-400"></span>
+      </div>
+      <div id="historyEmpty" class="hidden py-16 text-center">
+        <i class="fas fa-inbox text-slate-300 text-3xl mb-3"></i>
+        <p class="text-slate-400 text-sm">저장된 분석 이력이 없습니다.</p>
+      </div>
+      <div id="historyLoading" class="py-10 text-center">
+        <div class="inline-block w-6 h-6 border-2 border-blue-400 border-t-transparent rounded-full spin-slow"></div>
+      </div>
+      <div id="historyTable" class="hidden overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wide">
+            <tr>
+              <th class="px-5 py-3 text-left">분석 일시</th>
+              <th class="px-4 py-3 text-center">수집</th>
+              <th class="px-4 py-3 text-center">고객사</th>
+              <th class="px-4 py-3 text-center">소재</th>
+              <th class="px-4 py-3 text-center">소요</th>
+              <th class="px-4 py-3 text-left">시장 동향 요약</th>
+              <th class="px-4 py-3 text-center">관리</th>
+            </tr>
+          </thead>
+          <tbody id="historyTbody" class="divide-y divide-slate-100"></tbody>
+        </table>
+      </div>
+    </div>
+  </div><!-- /tabHistory -->
+
+</main>
+
+<!-- ══ 카드 템플릿: 고객사 ═══════════════════════════════════════ -->
+<template id="customerCardTpl">
+  <article class="bg-white rounded-2xl shadow-sm card-hover overflow-hidden border border-slate-100 fade-in-up">
+    <div class="company-bar h-1.5"></div>
+    <div class="p-5">
+      <div class="flex items-start justify-between gap-3 mb-3">
+        <div class="flex items-center gap-2 flex-wrap">
+          <span class="company-badge text-white text-xs font-bold px-3 py-1 rounded-full shadow-sm"></span>
+          <span class="score-badge text-white text-xs font-bold px-2.5 py-1 rounded-full shadow-sm">
+            <i class="fas fa-star text-xs mr-0.5"></i><span class="score-text"></span>
+          </span>
+          <span class="text-slate-400 text-xs"><span class="source-text"></span></span>
+        </div>
+        <span class="date-text text-slate-400 text-xs whitespace-nowrap mt-1"></span>
+      </div>
+      <a class="article-link block hover:text-blue-600 transition-colors" target="_blank" rel="noopener">
+        <h3 class="title-text font-semibold text-slate-800 text-sm leading-snug mb-3 line-clamp-2 hover:underline"></h3>
+      </a>
+      <div class="keywords-wrap flex flex-wrap gap-1.5 mb-3"></div>
+      <div class="summary-box rounded-xl p-3 mb-3">
+        <p class="text-xs font-semibold text-sky-700 mb-1"><i class="fas fa-align-left mr-1"></i>AI 요약</p>
+        <p class="summary-text text-slate-700 text-xs leading-relaxed"></p>
+      </div>
+      <div class="sales-box rounded-xl p-3">
+        <p class="text-xs font-semibold text-purple-700 mb-2"><i class="fas fa-bullseye mr-1"></i>LG화학 HPM 영업 인사이트</p>
+        <ul class="sales-insights-list space-y-1.5"></ul>
+      </div>
+    </div>
+  </article>
+</template>
+
+<!-- ══ 카드 템플릿: 소재 ═════════════════════════════════════════ -->
+<template id="materialCardTpl">
+  <article class="bg-white rounded-2xl shadow-sm card-hover overflow-hidden border border-slate-100 fade-in-up">
+    <div class="material-bar h-1.5"></div>
+    <div class="p-5">
+      <div class="flex items-start justify-between gap-3 mb-3">
+        <div class="flex items-center gap-2 flex-wrap">
+          <span class="material-badge text-white text-xs font-bold px-3 py-1 rounded-full shadow-sm"></span>
+          <span class="score-badge text-white text-xs font-bold px-2.5 py-1 rounded-full shadow-sm">
+            <i class="fas fa-star text-xs mr-0.5"></i><span class="score-text"></span>
+          </span>
+          <span class="text-slate-400 text-xs"><span class="source-text"></span></span>
+        </div>
+        <span class="date-text text-slate-400 text-xs whitespace-nowrap mt-1"></span>
+      </div>
+      <a class="article-link block hover:text-blue-600 transition-colors" target="_blank" rel="noopener">
+        <h3 class="title-text font-semibold text-slate-800 text-sm leading-snug mb-3 line-clamp-2 hover:underline"></h3>
+      </a>
+      <div class="keywords-wrap flex flex-wrap gap-1.5 mb-3"></div>
+      <div class="summary-box rounded-xl p-3 mb-3">
+        <p class="text-xs font-semibold text-sky-700 mb-1"><i class="fas fa-align-left mr-1"></i>AI 요약</p>
+        <p class="summary-text text-slate-700 text-xs leading-relaxed"></p>
+      </div>
+      <div class="insight-box rounded-xl p-3">
+        <p class="text-xs font-semibold text-yellow-700 mb-1"><i class="fas fa-lightbulb mr-1"></i>비즈니스 인사이트</p>
+        <p class="insight-text text-slate-700 text-xs leading-relaxed"></p>
+      </div>
+    </div>
+  </article>
+</template>
+
+<!-- ══ 이력 상세 모달 ════════════════════════════════════════════ -->
+<div id="historyModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+  <div class="modal-backdrop absolute inset-0" onclick="closeModal()"></div>
+  <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col">
+    <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+      <div>
+        <h2 class="font-bold text-slate-800 text-base" id="modalTitle">분석 이력 상세</h2>
+        <p class="text-xs text-slate-400 mt-0.5" id="modalSubtitle"></p>
+      </div>
+      <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 transition-colors">
+        <i class="fas fa-xmark text-xl"></i>
+      </button>
+    </div>
+    <!-- 모달 탭 -->
+    <div class="flex border-b border-slate-100 px-6">
+      <button class="modal-tab-btn active py-3 pr-5 text-sm font-medium" onclick="switchModalTab('customer', this)">
+        <i class="fas fa-users mr-1.5"></i>고객사 분석
+      </button>
+      <button class="modal-tab-btn py-3 pr-5 text-sm font-medium" onclick="switchModalTab('material', this)">
+        <i class="fas fa-flask mr-1.5"></i>소재 분석
+      </button>
+    </div>
+    <div class="overflow-y-auto flex-1 px-6 py-5">
+      <div id="modalCustomerGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+      <div id="modalMaterialGrid" class="hidden grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  /* ── 메타 데이터 (고객사/소재 색상) ─────────────────────── */
+  let CUSTOMERS = {}, MATERIALS = {};
+
+  fetch('/api/meta').then(r=>r.json()).then(d=>{
+    CUSTOMERS = d.customers || {};
+    MATERIALS = d.materials || {};
+  }).catch(()=>{});
+
+  /* ── 유틸 ─────────────────────────────────────────────── */
+  const $ = id => document.getElementById(id);
+  function show(id){ $(id).classList.remove('hidden'); }
+  function hide(id){ $(id).classList.add('hidden'); }
+
+  function formatDate(str){
+    if(!str) return '';
+    try{ return new Date(str).toLocaleDateString('ko-KR',{year:'numeric',month:'2-digit',day:'2-digit'}); }
+    catch{ return str.slice(0,10); }
+  }
+
+  function scoreStyle(score){
+    if(score>=80) return {bar:'#10b981', badge:'score-badge-high'};
+    if(score>=40) return {bar:'#f59e0b', badge:'score-badge-mid'};
+    return {bar:'#94a3b8', badge:'score-badge-low'};
+  }
+
+  function hideAnalysisStates(){
+    ['emptyState','loadingState','errorState','resultArea'].forEach(hide);
+  }
+
+  /* ── 메인 탭 ──────────────────────────────────────────── */
+  function switchMainTab(tab, btn){
+    document.querySelectorAll('.main-tab-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    if(tab==='analysis'){ show('tabAnalysis'); hide('tabHistory'); }
+    else{ hide('tabAnalysis'); show('tabHistory'); loadHistory(); }
+  }
+
+  /* ── 서브 탭 (고객사/소재) ────────────────────────────── */
+  function switchSubTab(tab, btn){
+    document.querySelectorAll('.sub-tab-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    if(tab==='customer'){ show('panelCustomer'); hide('panelMaterial'); }
+    else{ hide('panelCustomer'); show('panelMaterial'); }
+  }
+
+  /* ── 고객사 카드 생성 ─────────────────────────────────── */
+  function createCustomerCard(art, idx){
+    const tpl = document.getElementById('customerCardTpl');
+    const clone = tpl.content.cloneNode(true);
+    const el = clone.querySelector('article');
+    el.style.animationDelay = `${idx*60}ms`;
+
+    const companyInfo = CUSTOMERS[art.company] || {color:'#64748b'};
+    const style = scoreStyle(art.relevance_score);
+
+    el.querySelector('.company-bar').style.background = companyInfo.color;
+    const compBadge = el.querySelector('.company-badge');
+    compBadge.style.background = companyInfo.color;
+    compBadge.textContent = art.company || '—';
+
+    el.querySelector('.score-badge').classList.add(style.badge);
+    el.querySelector('.score-text').textContent = `${art.relevance_score}점`;
+    el.querySelector('.source-text').textContent = art.source || '';
+    el.querySelector('.date-text').textContent = formatDate(art.published);
+
+    const link = el.querySelector('.article-link');
+    link.href = art.link && art.link!=='#' ? art.link : '#';
+    el.querySelector('.title-text').textContent = art.title;
+
+    const kwWrap = el.querySelector('.keywords-wrap');
+    (art.core_keywords||[]).forEach(kw=>{
+      const chip = document.createElement('span');
+      chip.className='keyword-chip text-xs px-2.5 py-0.5 rounded-full font-medium';
+      chip.textContent = kw;
+      kwWrap.appendChild(chip);
+    });
+
+    el.querySelector('.summary-text').textContent = art.summary || '—';
+
+    const ul = el.querySelector('.sales-insights-list');
+    (art.sales_insights||[]).forEach(ins=>{
+      const li = document.createElement('li');
+      li.className='flex items-start gap-1.5 text-xs text-slate-700';
+      li.innerHTML=`<span class="text-purple-400 mt-0.5 flex-shrink-0">•</span><span>${ins}</span>`;
+      ul.appendChild(li);
+    });
+
+    return clone;
+  }
+
+  /* ── 소재 카드 생성 ───────────────────────────────────── */
+  function createMaterialCard(art, idx){
+    const tpl = document.getElementById('materialCardTpl');
+    const clone = tpl.content.cloneNode(true);
+    const el = clone.querySelector('article');
+    el.style.animationDelay = `${idx*60}ms`;
+
+    const matInfo = MATERIALS[art.material] || {color:'#64748b'};
+    const style = scoreStyle(art.relevance_score);
+
+    el.querySelector('.material-bar').style.background = matInfo.color;
+    const matBadge = el.querySelector('.material-badge');
+    matBadge.style.background = matInfo.color;
+    matBadge.textContent = art.material || '—';
+
+    el.querySelector('.score-badge').classList.add(style.badge);
+    el.querySelector('.score-text').textContent = `${art.relevance_score}점`;
+    el.querySelector('.source-text').textContent = art.source || '';
+    el.querySelector('.date-text').textContent = formatDate(art.published);
+
+    const link = el.querySelector('.article-link');
+    link.href = art.link && art.link!=='#' ? art.link : '#';
+    el.querySelector('.title-text').textContent = art.title;
+
+    const kwWrap = el.querySelector('.keywords-wrap');
+    (art.core_keywords||[]).forEach(kw=>{
+      const chip = document.createElement('span');
+      chip.className='keyword-chip text-xs px-2.5 py-0.5 rounded-full font-medium';
+      chip.textContent = kw;
+      kwWrap.appendChild(chip);
+    });
+
+    el.querySelector('.summary-text').textContent = art.summary || '—';
+    el.querySelector('.insight-text').textContent = art.business_insight || '—';
+
+    return clone;
+  }
+
+  /* ── 통계 바 갱신 ─────────────────────────────────────── */
+  function updateStats(stats){
+    $('statCollected').textContent = `${stats.collected}건`;
+    $('statCustomer').textContent  = `${stats.customer_count}건`;
+    $('statMaterial').textContent  = `${stats.material_count}건`;
+    $('statElapsed').textContent   = `${stats.elapsed}초`;
+    $('statTimestamp').textContent = stats.timestamp;
+    show('statsBar');
+  }
+
+  /* ── 요약 박스 렌더링 ─────────────────────────────────── */
+  function renderSummary(type, summary){
+    if(!summary) return;
+    $(type+'MarketTrend').textContent = summary.market_trend || '—';
+    $(type+'KeyInsight').textContent  = summary.key_insight  || '—';
+  }
+
+  /* ── 뉴스 수집 메인 ───────────────────────────────────── */
+  async function collectNews(){
+    const btn = $('collectBtn');
+    $('btnIcon').className = 'fas fa-circle-notch text-sm spin-slow';
+    $('btnText').textContent = '분석 중...';
+    btn.disabled = true;
+    btn.classList.replace('bg-blue-600','bg-blue-400');
+    btn.classList.replace('hover:bg-blue-500','cursor-not-allowed');
+
+    // 분석 탭으로 전환
+    document.querySelectorAll('.main-tab-btn').forEach((b,i)=>b.classList.toggle('active',i===0));
+    show('tabAnalysis'); hide('tabHistory');
+
+    hideAnalysisStates();
+    show('loadingState');
+
+    try{
+      const res  = await fetch('/api/collect',{method:'POST'});
+      const data = await res.json();
+
+      if(!res.ok || data.error){
+        hideAnalysisStates();
+        $('errorMsg').textContent = data.error || '알 수 없는 오류가 발생했습니다.';
+        show('errorState');
+        return;
       }
-    }
 
-    /* ── 세션 요약 표시 ─────────────────────────────────────── */
-    function renderSessionSummary(summary) {
-      if (!summary || (!summary.market_trend && !summary.key_insight)) return;
-      $('summaryMarketTrend').textContent = summary.market_trend || '—';
-      $('summaryKeyInsight').textContent = summary.key_insight || '—';
-      const kwWrap = $('summaryKeywords');
-      kwWrap.innerHTML = '';
-      (summary.top_keywords || []).forEach(kw => {
-        const chip = document.createElement('span');
-        chip.className = 'keyword-chip-trend text-xs px-2.5 py-0.5 rounded-full font-medium';
-        chip.textContent = kw;
-        kwWrap.appendChild(chip);
-      });
-      show('sessionSummaryBox');
-    }
+      updateStats(data.stats);
 
-    /* ── 기사 카드 생성 ─────────────────────────────────────── */
-    function createCard(art, idx) {
-      const tpl = document.getElementById('articleCardTpl');
-      const clone = tpl.content.cloneNode(true);
-      const el = clone.querySelector('article');
+      // 고객사 분석 렌더링
+      renderSummary('customer', data.customer_summary);
+      const cGrid = $('customerGrid');
+      cGrid.innerHTML = '';
+      const cArts = (data.customer_articles||[]).sort((a,b)=>b.relevance_score-a.relevance_score);
+      if(cArts.length===0){ show('customerEmpty'); }
+      else{ hide('customerEmpty'); cArts.forEach((a,i)=>cGrid.appendChild(createCustomerCard(a,i))); }
 
-      el.style.animationDelay = `${idx * 60}ms`;
-      const style = scoreStyle(art.relevance_score);
-
-      el.querySelector('.score-bar').style.background = style.bar;
-      el.querySelector('.score-badge').classList.add(style.badge);
-      el.querySelector('.score-text').textContent = `${art.relevance_score}점`;
-      el.querySelector('.source-text').textContent = art.source || 'Unknown';
-      el.querySelector('.date-text').textContent = formatDate(art.published);
-
-      const link = el.querySelector('.article-link');
-      link.href = art.link && art.link !== '#' ? art.link : '#';
-      el.querySelector('.title-text').textContent = art.title;
-
-      const kwWrap = el.querySelector('.keywords-wrap');
-      (art.core_keywords || []).forEach(kw => {
-        const chip = document.createElement('span');
-        chip.className = 'keyword-chip text-xs px-2.5 py-0.5 rounded-full font-medium';
-        chip.textContent = kw;
-        kwWrap.appendChild(chip);
-      });
-
-      el.querySelector('.summary-text').textContent = art.summary || '—';
-      el.querySelector('.insight-text').textContent = art.business_insight || '—';
-
-      return clone;
-    }
-
-    /* ── 통계 바 ────────────────────────────────────────────── */
-    function updateStats(stats) {
-      $('statCollected').textContent = `${stats.collected}건`;
-      $('statFiltered').textContent = `${stats.filtered}건`;
-      $('statElapsed').textContent = `${stats.elapsed}초`;
-      $('statTimestamp').textContent = stats.timestamp;
-      show('statsBar');
-    }
-
-    /* ── 뉴스 수집 메인 ─────────────────────────────────────── */
-    async function collectNews() {
-      const btn = $('collectBtn');
-      $('btnIcon').className = 'fas fa-circle-notch text-sm spin-slow';
-      $('btnText').textContent = '분석 중...';
-      btn.disabled = true;
-      btn.classList.replace('bg-blue-600', 'bg-blue-400');
-      btn.classList.replace('hover:bg-blue-500', 'cursor-not-allowed');
+      // 소재 분석 렌더링
+      renderSummary('material', data.material_summary);
+      const mGrid = $('materialGrid');
+      mGrid.innerHTML = '';
+      const mArts = (data.material_articles||[]).sort((a,b)=>b.relevance_score-a.relevance_score);
+      if(mArts.length===0){ show('materialEmpty'); }
+      else{ hide('materialEmpty'); mArts.forEach((a,i)=>mGrid.appendChild(createMaterialCard(a,i))); }
 
       hideAnalysisStates();
-      show('loadingState');
+      show('resultArea');
 
-      // 분석 탭으로 자동 전환
-      document.querySelectorAll('.tab-btn').forEach((b, i) => {
-        b.classList.toggle('active', i === 0);
+      // 기본 서브탭: 고객사
+      document.querySelectorAll('.sub-tab-btn').forEach((b,i)=>b.classList.toggle('active',i===0));
+      show('panelCustomer'); hide('panelMaterial');
+
+    } catch(err){
+      hideAnalysisStates();
+      $('errorMsg').textContent = `네트워크 오류: ${err.message}`;
+      show('errorState');
+    } finally{
+      $('btnIcon').className = 'fas fa-satellite-dish text-sm';
+      $('btnText').textContent = '뉴스 수집 및 분석';
+      btn.disabled = false;
+      btn.classList.replace('bg-blue-400','bg-blue-600');
+      btn.classList.replace('cursor-not-allowed','hover:bg-blue-500');
+    }
+  }
+
+  /* ── 이력 로드 ────────────────────────────────────────── */
+  async function loadHistory(){
+    show('historyLoading'); hide('historyTable'); hide('historyEmpty'); hide('keywordTrendBox');
+    try{
+      const res  = await fetch('/api/history');
+      const data = await res.json();
+      const sessions = data.sessions||[];
+      hide('historyLoading');
+      $('historyCount').textContent = `총 ${sessions.length}건`;
+
+      if(sessions.length===0){ show('historyEmpty'); return; }
+
+      renderKeywordTrend(sessions);
+
+      const tbody = $('historyTbody');
+      tbody.innerHTML='';
+      sessions.forEach(s=>{
+        const tr = document.createElement('tr');
+        tr.className='history-row';
+        tr.onclick=()=>openHistoryDetail(s.id);
+        tr.innerHTML=`
+          <td class="px-5 py-3.5 text-slate-700 font-medium whitespace-nowrap">
+            <i class="fas fa-clock text-slate-300 mr-1.5"></i>${s.created_at}
+          </td>
+          <td class="px-4 py-3.5 text-center text-slate-600">${s.collected_count}건</td>
+          <td class="px-4 py-3.5 text-center text-emerald-600 font-semibold">${s.customer_count||0}건</td>
+          <td class="px-4 py-3.5 text-center text-purple-600 font-semibold">${s.material_count||0}건</td>
+          <td class="px-4 py-3.5 text-center text-blue-500">${s.elapsed_seconds}초</td>
+          <td class="px-4 py-3.5 text-slate-500 text-xs max-w-xs truncate">${s.market_trend||'—'}</td>
+          <td class="px-4 py-3.5 text-center">
+            <button onclick="event.stopPropagation();deleteSession(${s.id},this)"
+              class="text-slate-300 hover:text-red-400 transition-colors text-sm">
+              <i class="fas fa-trash"></i>
+            </button>
+          </td>`;
+        tbody.appendChild(tr);
       });
-      show('tabAnalysis');
-      hide('tabHistory');
+      show('historyTable');
+    } catch(err){ hide('historyLoading'); show('historyEmpty'); }
+  }
 
-      try {
-        const res = await fetch('/api/collect', { method: 'POST' });
-        const data = await res.json();
-
-        if (!res.ok || data.error) {
-          hideAnalysisStates();
-          $('errorMsg').textContent = data.error || '알 수 없는 오류가 발생했습니다.';
-          show('errorState');
-          return;
-        }
-
-        updateStats(data.stats);
-        renderSessionSummary(data.session_summary);
-
-        if (!data.articles || data.articles.length === 0) {
-          hideAnalysisStates();
-          show('noResultState');
-          return;
-        }
-
-        data.articles.sort((a, b) => b.relevance_score - a.relevance_score);
-
-        const grid = $('articlesGrid');
-        grid.innerHTML = '';
-        data.articles.forEach((art, i) => grid.appendChild(createCard(art, i)));
-
-        hideAnalysisStates();
-        if (data.session_summary && data.session_summary.market_trend) show('sessionSummaryBox');
-        show('articlesGrid');
-
-      } catch (err) {
-        hideAnalysisStates();
-        $('errorMsg').textContent = `네트워크 오류: ${err.message}`;
-        show('errorState');
-      } finally {
-        $('btnIcon').className = 'fas fa-satellite-dish text-sm';
-        $('btnText').textContent = '뉴스 수집 및 분석';
-        btn.disabled = false;
-        btn.classList.replace('bg-blue-400', 'bg-blue-600');
-        btn.classList.replace('cursor-not-allowed', 'hover:bg-blue-500');
-      }
-    }
-
-    /* ── 이력 목록 로드 ─────────────────────────────────────── */
-    async function loadHistory() {
-      show('historyLoading');
-      hide('historyTable');
-      hide('historyEmpty');
-      hide('keywordTrendBox');
-
-      try {
-        const res = await fetch('/api/history');
-        const data = await res.json();
-        const sessions = data.sessions || [];
-
-        hide('historyLoading');
-        $('historyCount').textContent = `총 ${sessions.length}건`;
-
-        if (sessions.length === 0) {
-          show('historyEmpty');
-          return;
-        }
-
-        // 키워드 트렌드 렌더링
-        renderKeywordTrend(sessions);
-
-        // 이력 테이블 렌더링
-        const tbody = $('historyTbody');
-        tbody.innerHTML = '';
-        sessions.forEach(s => {
-          const tr = document.createElement('tr');
-          tr.className = 'history-row';
-          tr.onclick = () => openHistoryDetail(s.id);
-
-          const kwHtml = (s.top_keywords || []).slice(0, 3).map(kw =>
-            `<span class="keyword-chip-trend text-xs px-2 py-0.5 rounded-full">${kw}</span>`
-          ).join('');
-
-          tr.innerHTML = `
-            <td class="px-5 py-3.5 text-slate-700 font-medium whitespace-nowrap">
-              <i class="fas fa-clock text-slate-300 mr-1.5"></i>${s.created_at}
-            </td>
-            <td class="px-4 py-3.5 text-center text-slate-600">${s.collected_count}건</td>
-            <td class="px-4 py-3.5 text-center text-emerald-600 font-semibold">${s.analyzed_count}건</td>
-            <td class="px-4 py-3.5 text-center text-blue-500">${s.elapsed_seconds}초</td>
-            <td class="px-4 py-3.5"><div class="flex flex-wrap gap-1">${kwHtml}</div></td>
-            <td class="px-4 py-3.5 text-slate-500 text-xs max-w-xs truncate">${s.market_trend || '—'}</td>
-            <td class="px-4 py-3.5 text-center">
-              <button onclick="event.stopPropagation(); deleteSession(${s.id}, this)"
-                class="text-slate-300 hover:text-red-400 transition-colors text-sm">
-                <i class="fas fa-trash"></i>
-              </button>
-            </td>
-          `;
-          tbody.appendChild(tr);
-        });
-
-        show('historyTable');
-
-      } catch (err) {
-        hide('historyLoading');
-        show('historyEmpty');
-      }
-    }
-
-    /* ── 키워드 트렌드 렌더링 ───────────────────────────────── */
-    function renderKeywordTrend(sessions) {
-      const container = $('keywordTrendList');
-      container.innerHTML = '';
-
-      // 키워드 빈도 집계
-      const freq = {};
-      sessions.forEach(s => {
-        (s.top_keywords || []).forEach(kw => {
-          freq[kw] = (freq[kw] || 0) + 1;
-        });
-      });
-
-      const sorted = Object.entries(freq).sort((a, b) => b[1] - a[1]).slice(0, 10);
-      if (sorted.length === 0) return;
-
-      const maxCount = sorted[0][1];
-      sorted.forEach(([kw, count]) => {
-        const pct = Math.round((count / maxCount) * 100);
-        const div = document.createElement('div');
-        div.className = 'flex items-center gap-3';
-        div.innerHTML = `
-          <span class="text-xs text-slate-600 w-32 text-right truncate font-medium">${kw}</span>
-          <div class="flex-1 bg-slate-100 rounded-full h-2 overflow-hidden">
-            <div class="bg-blue-400 h-2 rounded-full transition-all" style="width:${pct}%"></div>
-          </div>
-          <span class="text-xs text-slate-400 w-10">${count}회</span>
-        `;
-        container.appendChild(div);
-      });
-
-      show('keywordTrendBox');
-    }
-
-    /* ── 이력 상세 모달 ─────────────────────────────────────── */
-    async function openHistoryDetail(sessionId) {
-      show('historyModal');
-      $('modalTitle').textContent = '분석 이력 상세';
-      $('modalSubtitle').textContent = '불러오는 중...';
-      $('modalArticleGrid').innerHTML = '<div class="col-span-2 py-10 text-center text-slate-400 text-sm">로딩 중...</div>';
-
-      try {
-        const res = await fetch(`/api/history/${sessionId}`);
-        const data = await res.json();
-
-        if (data.error) throw new Error(data.error);
-
-        $('modalTitle').textContent = `분석 이력 #${data.id}`;
-        $('modalSubtitle').textContent = `${data.created_at} · 수집 ${data.collected_count}건 · 분석 ${data.analyzed_count}건 · ${data.elapsed_seconds}초`;
-        $('modalMarketTrend').textContent = data.market_trend || '—';
-        $('modalKeyInsight').textContent = data.key_insight || '—';
-
-        const kwWrap = $('modalKeywords');
-        kwWrap.innerHTML = '';
-        (data.top_keywords || []).forEach(kw => {
-          const chip = document.createElement('span');
-          chip.className = 'keyword-chip-trend text-xs px-2.5 py-0.5 rounded-full font-medium';
-          chip.textContent = kw;
-          kwWrap.appendChild(chip);
-        });
-
-        const grid = $('modalArticleGrid');
-        grid.innerHTML = '';
-        (data.articles || []).forEach((art, i) => {
-          grid.appendChild(createCard(art, i));
-        });
-
-      } catch (err) {
-        $('modalSubtitle').textContent = '오류가 발생했습니다.';
-        $('modalArticleGrid').innerHTML = `<div class="col-span-2 py-10 text-center text-red-400 text-sm">${err.message}</div>`;
-      }
-    }
-
-    function closeModal() {
-      hide('historyModal');
-    }
-
-    /* ── 이력 삭제 ──────────────────────────────────────────── */
-    async function deleteSession(sessionId, btn) {
-      if (!confirm('이 분석 이력을 삭제할까요?')) return;
-      try {
-        const res = await fetch(`/api/history/${sessionId}`, { method: 'DELETE' });
-        const data = await res.json();
-        if (data.ok) {
-          btn.closest('tr').remove();
-        }
-      } catch (err) {
-        alert('삭제 중 오류가 발생했습니다.');
-      }
-    }
-
-    /* ── ESC 키로 모달 닫기 ─────────────────────────────────── */
-    document.addEventListener('keydown', e => {
-      if (e.key === 'Escape') closeModal();
+  /* ── 키워드 트렌드 ────────────────────────────────────── */
+  function renderKeywordTrend(sessions){
+    const freq={};
+    sessions.forEach(s=>(s.top_keywords||[]).forEach(kw=>{ freq[kw]=(freq[kw]||0)+1; }));
+    const sorted=Object.entries(freq).sort((a,b)=>b[1]-a[1]).slice(0,10);
+    if(!sorted.length) return;
+    const max=sorted[0][1];
+    const container=$('keywordTrendList');
+    container.innerHTML='';
+    sorted.forEach(([kw,count])=>{
+      const pct=Math.round(count/max*100);
+      const div=document.createElement('div');
+      div.className='flex items-center gap-3';
+      div.innerHTML=`
+        <span class="text-xs text-slate-600 w-28 text-right truncate font-medium">${kw}</span>
+        <div class="flex-1 bg-slate-100 rounded-full h-2 overflow-hidden">
+          <div class="bg-blue-400 h-2 rounded-full" style="width:${pct}%"></div>
+        </div>
+        <span class="text-xs text-slate-400 w-8">${count}회</span>`;
+      container.appendChild(div);
     });
-  </script>
+    show('keywordTrendBox');
+  }
+
+  /* ── 이력 상세 모달 ───────────────────────────────────── */
+  async function openHistoryDetail(sessionId){
+    show('historyModal');
+    $('modalTitle').textContent='분석 이력 상세';
+    $('modalSubtitle').textContent='불러오는 중...';
+    $('modalCustomerGrid').innerHTML='<div class="col-span-2 py-8 text-center text-slate-400 text-sm">로딩 중...</div>';
+    $('modalMaterialGrid').innerHTML='';
+
+    // 모달 탭 초기화
+    document.querySelectorAll('.modal-tab-btn').forEach((b,i)=>b.classList.toggle('active',i===0));
+    show('modalCustomerGrid'); hide('modalMaterialGrid');
+
+    try{
+      const res  = await fetch(`/api/history/${sessionId}`);
+      const data = await res.json();
+      if(data.error) throw new Error(data.error);
+
+      $('modalTitle').textContent=`분석 이력 #${data.id}`;
+      $('modalSubtitle').textContent=
+        `${data.created_at} · 수집 ${data.collected_count}건 · 고객사 ${(data.customer_articles||[]).length}건 · 소재 ${(data.material_articles||[]).length}건 · ${data.elapsed_seconds}초`;
+
+      const cGrid=$('modalCustomerGrid');
+      cGrid.innerHTML='';
+      (data.customer_articles||[]).forEach((a,i)=>cGrid.appendChild(createCustomerCard(a,i)));
+      if(!(data.customer_articles||[]).length)
+        cGrid.innerHTML='<div class="col-span-2 py-6 text-center text-slate-400 text-sm">고객사 분석 기사 없음</div>';
+
+      const mGrid=$('modalMaterialGrid');
+      mGrid.innerHTML='';
+      (data.material_articles||[]).forEach((a,i)=>mGrid.appendChild(createMaterialCard(a,i)));
+      if(!(data.material_articles||[]).length)
+        mGrid.innerHTML='<div class="col-span-2 py-6 text-center text-slate-400 text-sm">소재 분석 기사 없음</div>';
+
+    } catch(err){
+      $('modalCustomerGrid').innerHTML=`<div class="col-span-2 py-8 text-center text-red-400 text-sm">${err.message}</div>`;
+    }
+  }
+
+  function switchModalTab(tab, btn){
+    document.querySelectorAll('.modal-tab-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    if(tab==='customer'){ show('modalCustomerGrid'); hide('modalMaterialGrid'); }
+    else{ hide('modalCustomerGrid'); show('modalMaterialGrid'); }
+  }
+
+  function closeModal(){ hide('historyModal'); }
+
+  async function deleteSession(sessionId, btn){
+    if(!confirm('이 분석 이력을 삭제할까요?')) return;
+    try{
+      const res=await fetch(`/api/history/${sessionId}`,{method:'DELETE'});
+      const data=await res.json();
+      if(data.ok) btn.closest('tr').remove();
+    } catch(err){ alert('삭제 중 오류가 발생했습니다.'); }
+  }
+
+  document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeModal(); });
+</script>
 </body>
 </html>
