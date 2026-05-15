@@ -645,6 +645,59 @@ def meta():
     return jsonify({"customers": CUSTOMERS, "materials": MATERIALS})
 
 
+# ── 태그별 인사이트 조회 API ────────────────────────────────────────
+@app.route("/api/insights", methods=["GET"])
+def insights():
+    from flask import request as freq
+    tag = freq.args.get("tag", "").strip()
+    if not tag:
+        return jsonify({"error": "tag 파라미터가 필요합니다."}), 400
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        conn.row_factory = sqlite3.Row
+        rows = conn.execute(
+            """SELECT a.*, s.created_at as session_date, s.id as session_id
+               FROM articles a
+               JOIN sessions s ON a.session_id = s.id
+               WHERE a.tag = ?
+               ORDER BY s.id DESC, a.relevance_score DESC""",
+            (tag,)
+        ).fetchall()
+        result = []
+        for a in rows:
+            kw = []
+            try:
+                kw = json.loads(a["core_keywords"] or "[]")
+            except Exception:
+                pass
+            raw_si = a["sales_insights"] or ""
+            try:
+                si = json.loads(raw_si)
+                if not isinstance(si, list):
+                    si = raw_si
+            except Exception:
+                si = raw_si
+            result.append({
+                "session_id":      a["session_id"],
+                "session_date":    a["session_date"],
+                "analysis_type":   a["analysis_type"],
+                "tag":             a["tag"],
+                "title":           a["title"],
+                "source":          a["source"],
+                "published":       a["published"],
+                "link":            a["link"],
+                "relevance_score": a["relevance_score"],
+                "core_keywords":   kw,
+                "summary":         a["summary"],
+                "business_insight":a["business_insight"],
+                "sales_insights":  si,
+            })
+        conn.close()
+        return jsonify({"tag": tag, "articles": result, "count": len(result)})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 # gunicorn 등 외부 실행 환경에서도 DB 초기화 보장
 init_db()
 

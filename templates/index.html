@@ -58,6 +58,11 @@
     .history-row { transition:background .15s ease; cursor:pointer; }
     .history-row:hover { background:#f1f5f9; }
 
+    /* 인사이트 필터 태그 버튼 */
+    .tag-btn { transition:all .15s ease; border:1px solid #e2e8f0; }
+    .tag-btn:hover { border-color:#94a3b8; background:#f8fafc; }
+    .tag-btn.selected { color:#fff !important; border-color:transparent; box-shadow:0 2px 8px rgba(0,0,0,.15); }
+
     .modal-backdrop { background:rgba(0,0,0,.5); backdrop-filter:blur(4px); }
     .modal-tab-btn { transition:all .15s ease; border-bottom:2px solid transparent; }
     .modal-tab-btn.active { color:#1d4ed8; border-bottom-color:#3b82f6; }
@@ -278,7 +283,49 @@
   <!-- ── 분석 이력 탭 ──────────────────────────────────────────── -->
   <div id="tabHistory" class="hidden">
 
-    <!-- 키워드 트렌드 -->
+    <!-- ① 인사이트 필터 -->
+    <div id="insightFilterBox" class="mb-6 bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
+      <h3 class="text-sm font-semibold text-slate-700 mb-4 flex items-center gap-2">
+        <i class="fas fa-filter text-blue-500"></i> 인사이트 필터 조회
+        <span class="text-xs text-slate-400 font-normal">— 고객사 또는 소재를 선택하면 관련 인사이트를 모아볼 수 있습니다</span>
+      </h3>
+
+      <!-- 고객사 버튼 -->
+      <div class="mb-3">
+        <p class="text-xs font-semibold text-slate-500 mb-2"><i class="fas fa-users mr-1"></i>주요 고객사</p>
+        <div id="customerTagBtns" class="flex flex-wrap gap-2"></div>
+      </div>
+
+      <!-- 소재 버튼 -->
+      <div>
+        <p class="text-xs font-semibold text-slate-500 mb-2"><i class="fas fa-flask mr-1"></i>소재</p>
+        <div id="materialTagBtns" class="flex flex-wrap gap-2"></div>
+      </div>
+    </div>
+
+    <!-- ② 필터 결과 패널 -->
+    <div id="insightResultPanel" class="hidden mb-6">
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+        <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+          <h3 class="text-sm font-semibold text-slate-700 flex items-center gap-2">
+            <i class="fas fa-magnifying-glass text-slate-400"></i>
+            <span id="insightResultTitle"></span>
+          </h3>
+          <button onclick="clearInsightFilter()" class="text-xs text-slate-400 hover:text-slate-600 transition-colors">
+            <i class="fas fa-xmark mr-1"></i>필터 해제
+          </button>
+        </div>
+        <div id="insightResultLoading" class="hidden py-8 text-center">
+          <div class="inline-block w-5 h-5 border-2 border-blue-400 border-t-transparent rounded-full spin-slow"></div>
+        </div>
+        <div id="insightResultEmpty" class="hidden py-10 text-center text-slate-400 text-sm">
+          <i class="fas fa-inbox text-2xl mb-2"></i><br>관련 인사이트가 없습니다.
+        </div>
+        <div id="insightResultGrid" class="hidden p-5 grid grid-cols-1 lg:grid-cols-2 gap-4"></div>
+      </div>
+    </div>
+
+    <!-- ③ 키워드 트렌드 -->
     <div id="keywordTrendBox" class="hidden mb-6 bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
       <h3 class="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
         <i class="fas fa-tags text-blue-500"></i> 키워드 트렌드 (최근 10회)
@@ -286,7 +333,7 @@
       <div id="keywordTrendList" class="space-y-2"></div>
     </div>
 
-    <!-- 이력 목록 -->
+    <!-- ④ 이력 목록 -->
     <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
       <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
         <h3 class="text-sm font-semibold text-slate-700 flex items-center gap-2">
@@ -648,15 +695,125 @@
     }
   }
 
+  /* ── 인사이트 필터 버튼 렌더링 ──────────────────────────── */
+  function renderTagButtons() {
+    const cWrap = $('customerTagBtns');
+    const mWrap = $('materialTagBtns');
+    if (!cWrap || !mWrap) return;
+
+    cWrap.innerHTML = '';
+    Object.entries(CUSTOMERS).forEach(([key, info]) => {
+      const btn = document.createElement('button');
+      btn.className = 'tag-btn text-xs font-semibold px-4 py-1.5 rounded-full bg-white';
+      btn.style.color = info.color;
+      btn.dataset.tag = key;
+      btn.dataset.type = 'customer';
+      btn.innerHTML = `<i class="fas fa-circle text-[8px] mr-1.5" style="color:${info.color}"></i>${info.kor || key}`;
+      btn.onclick = () => selectTagFilter(key, 'customer', btn, info.color);
+      cWrap.appendChild(btn);
+    });
+
+    mWrap.innerHTML = '';
+    Object.entries(MATERIALS).forEach(([key, info]) => {
+      const btn = document.createElement('button');
+      btn.className = 'tag-btn text-xs font-semibold px-4 py-1.5 rounded-full bg-white';
+      btn.style.color = info.color;
+      btn.dataset.tag = key;
+      btn.dataset.type = 'material';
+      btn.innerHTML = `<i class="fas fa-circle text-[8px] mr-1.5" style="color:${info.color}"></i>${key}`;
+      btn.onclick = () => selectTagFilter(key, 'material', btn, info.color);
+      mWrap.appendChild(btn);
+    });
+  }
+
+  /* ── 태그 필터 선택 ─────────────────────────────────────── */
+  let activeTagBtn = null;
+
+  async function selectTagFilter(tag, type, btn, color) {
+    // 버튼 활성화 토글
+    if (activeTagBtn === btn) {
+      clearInsightFilter();
+      return;
+    }
+    if (activeTagBtn) activeTagBtn.classList.remove('selected');
+    activeTagBtn = btn;
+    btn.classList.add('selected');
+    btn.style.background = color;
+    btn.style.color = '#fff';
+
+    // 결과 패널 표시
+    show('insightResultPanel');
+    hide('insightResultGrid');
+    hide('insightResultEmpty');
+    show('insightResultLoading');
+
+    const label = type === 'customer'
+      ? (CUSTOMERS[tag]?.kor || tag)
+      : tag;
+    $('insightResultTitle').textContent = `"${label}" 관련 인사이트 조회 결과`;
+
+    try {
+      const res  = await fetch(`/api/insights?tag=${encodeURIComponent(tag)}`);
+      const data = await res.json();
+      hide('insightResultLoading');
+
+      if (!data.articles || data.articles.length === 0) {
+        show('insightResultEmpty');
+        return;
+      }
+
+      $('insightResultTitle').textContent =
+        `"${label}" 관련 인사이트 — ${data.count}건 (전체 이력 기준)`;
+
+      const grid = $('insightResultGrid');
+      grid.innerHTML = '';
+      data.articles.forEach((art, i) => {
+        const card = type === 'customer'
+          ? createCustomerCard(art, i)
+          : createMaterialCard(art, i);
+
+        // 세션 날짜 배지 추가
+        const article = card.querySelector('article');
+        const dateBadge = document.createElement('div');
+        dateBadge.className = 'px-5 pt-2 pb-0 text-xs text-slate-400 flex items-center gap-1';
+        dateBadge.innerHTML = `<i class="fas fa-clock text-slate-300"></i> 분석일: ${art.session_date}`;
+        article.insertBefore(dateBadge, article.querySelector('.p-5'));
+
+        grid.appendChild(card);
+      });
+      show('insightResultGrid');
+
+    } catch(err) {
+      hide('insightResultLoading');
+      show('insightResultEmpty');
+    }
+  }
+
+  function clearInsightFilter() {
+    if (activeTagBtn) {
+      const tag = activeTagBtn.dataset.tag;
+      const type = activeTagBtn.dataset.type;
+      const info = type === 'customer' ? CUSTOMERS[tag] : MATERIALS[tag];
+      activeTagBtn.classList.remove('selected');
+      activeTagBtn.style.background = '#fff';
+      activeTagBtn.style.color = info?.color || '#64748b';
+      activeTagBtn = null;
+    }
+    hide('insightResultPanel');
+  }
+
   /* ── 이력 로드 ────────────────────────────────────────── */
   async function loadHistory(){
     show('historyLoading'); hide('historyTable'); hide('historyEmpty'); hide('keywordTrendBox');
+    hide('insightResultPanel'); clearInsightFilter();
     try{
       const res  = await fetch('/api/history');
       const data = await res.json();
       const sessions = data.sessions||[];
       hide('historyLoading');
       $('historyCount').textContent = `총 ${sessions.length}건`;
+
+      renderTagButtons();
 
       if(sessions.length===0){ show('historyEmpty'); return; }
 
