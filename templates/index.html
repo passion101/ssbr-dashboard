@@ -21,15 +21,9 @@
       box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
     }
 
-    .score-badge-high {
-      background: linear-gradient(135deg, #059669, #10b981);
-    }
-    .score-badge-mid {
-      background: linear-gradient(135deg, #d97706, #f59e0b);
-    }
-    .score-badge-low {
-      background: linear-gradient(135deg, #64748b, #94a3b8);
-    }
+    .score-badge-high { background: linear-gradient(135deg, #059669, #10b981); }
+    .score-badge-mid  { background: linear-gradient(135deg, #d97706, #f59e0b); }
+    .score-badge-low  { background: linear-gradient(135deg, #64748b, #94a3b8); }
 
     .keyword-chip {
       background: linear-gradient(135deg, #eff6ff, #dbeafe);
@@ -37,18 +31,20 @@
       color: #1d4ed8;
     }
 
-    @keyframes spin-slow {
-      to { transform: rotate(360deg); }
+    .keyword-chip-trend {
+      background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+      border: 1px solid #bbf7d0;
+      color: #15803d;
     }
+
+    @keyframes spin-slow { to { transform: rotate(360deg); } }
     .spin-slow { animation: spin-slow 1.5s linear infinite; }
 
     @keyframes fadeInUp {
       from { opacity: 0; transform: translateY(16px); }
       to   { opacity: 1; transform: translateY(0); }
     }
-    .fade-in-up {
-      animation: fadeInUp 0.4s ease forwards;
-    }
+    .fade-in-up { animation: fadeInUp 0.4s ease forwards; }
 
     .stat-card {
       background: rgba(255,255,255,0.08);
@@ -60,18 +56,13 @@
       background: linear-gradient(135deg, #fefce8, #fef9c3);
       border-left: 3px solid #eab308;
     }
-
     .summary-box {
       background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
       border-left: 3px solid #0284c7;
     }
-
-    .pulse-ring {
-      animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-    }
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
+    .trend-box {
+      background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+      border-left: 3px solid #16a34a;
     }
 
     .shimmer {
@@ -82,6 +73,27 @@
     @keyframes shimmer {
       0%   { background-position: 200% 0; }
       100% { background-position: -200% 0; }
+    }
+
+    .tab-btn { transition: all 0.2s ease; }
+    .tab-btn.active {
+      background: rgba(255,255,255,0.15);
+      border-bottom: 2px solid #60a5fa;
+      color: #93c5fd;
+    }
+    .tab-btn:not(.active) { color: #94a3b8; }
+    .tab-btn:not(.active):hover { color: #cbd5e1; }
+
+    .history-row {
+      transition: background 0.15s ease;
+      cursor: pointer;
+    }
+    .history-row:hover { background: #f1f5f9; }
+
+    /* 모달 */
+    .modal-backdrop {
+      background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(4px);
     }
 
     ::-webkit-scrollbar { width: 6px; }
@@ -96,7 +108,6 @@
     <div class="max-w-7xl mx-auto px-6 py-6">
       <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
 
-        <!-- 타이틀 -->
         <div>
           <div class="flex items-center gap-3 mb-1">
             <div class="w-9 h-9 bg-blue-500/30 rounded-lg flex items-center justify-center">
@@ -112,7 +123,6 @@
           </p>
         </div>
 
-        <!-- 수집 버튼 -->
         <button
           id="collectBtn"
           onclick="collectNews()"
@@ -144,109 +154,189 @@
           <p class="text-slate-200 text-sm font-semibold mt-0.5" id="statTimestamp">—</p>
         </div>
       </div>
+
+      <!-- 탭 -->
+      <div class="flex gap-1 mt-5 border-b border-white/10">
+        <button class="tab-btn active px-4 py-2 text-sm font-medium rounded-t-lg" onclick="switchTab('analysis', this)">
+          <i class="fas fa-chart-bar mr-1.5"></i>최신 분석
+        </button>
+        <button class="tab-btn px-4 py-2 text-sm font-medium rounded-t-lg" onclick="switchTab('history', this)">
+          <i class="fas fa-clock-rotate-left mr-1.5"></i>분석 이력
+        </button>
+      </div>
     </div>
   </header>
 
   <!-- ══ MAIN ════════════════════════════════════════════════════════ -->
   <main class="max-w-7xl mx-auto px-6 py-8">
 
-    <!-- 초기 안내 -->
-    <div id="emptyState" class="flex flex-col items-center justify-center py-20 text-center">
-      <div class="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mb-5">
-        <i class="fas fa-newspaper text-blue-400 text-3xl"></i>
-      </div>
-      <h2 class="text-xl font-semibold text-slate-700 mb-2">분석 준비 완료</h2>
-      <p class="text-slate-500 max-w-sm text-sm leading-relaxed">
-        상단의 <strong class="text-slate-700">뉴스 수집 및 분석</strong> 버튼을 클릭하면
-        글로벌 뉴스를 수집하고 AI가 양말단 SSBR 연관 기사를 자동으로 선별합니다.
-      </p>
-      <div class="mt-6 flex flex-wrap justify-center gap-2">
-        <span class="bg-white border border-slate-200 text-slate-600 text-xs px-3 py-1.5 rounded-full shadow-sm">
-          <i class="fas fa-globe text-blue-400 mr-1"></i> Google News 다중 쿼리
-        </span>
-        <span class="bg-white border border-slate-200 text-slate-600 text-xs px-3 py-1.5 rounded-full shadow-sm">
-          <i class="fas fa-brain text-purple-400 mr-1"></i> Claude AI 연관성 점수 분석
-        </span>
-        <span class="bg-white border border-slate-200 text-slate-600 text-xs px-3 py-1.5 rounded-full shadow-sm">
-          <i class="fas fa-lightbulb text-yellow-400 mr-1"></i> 비즈니스 인사이트 자동 생성
-        </span>
-      </div>
-    </div>
+    <!-- ── 최신 분석 탭 ──────────────────────────────────────────── -->
+    <div id="tabAnalysis">
 
-    <!-- 로딩 -->
-    <div id="loadingState" class="hidden">
-      <div class="flex flex-col items-center py-16">
-        <div class="relative mb-6">
-          <div class="w-16 h-16 border-4 border-blue-100 rounded-full"></div>
-          <div class="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full spin-slow absolute inset-0"></div>
+      <!-- 초기 안내 -->
+      <div id="emptyState" class="flex flex-col items-center justify-center py-20 text-center">
+        <div class="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mb-5">
+          <i class="fas fa-newspaper text-blue-400 text-3xl"></i>
         </div>
-        <p class="text-slate-700 font-semibold text-lg mb-1" id="loadingMsg">뉴스 수집 중...</p>
-        <p class="text-slate-400 text-sm">글로벌 뉴스 소스에서 SSBR 관련 기사를 수집하고 AI가 분석 중입니다</p>
-      </div>
-      <!-- 스켈레톤 -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-5 mt-4">
-        <div class="bg-white rounded-2xl p-5 shadow-sm" style="animation-delay:0ms">
-          <div class="shimmer h-4 w-3/4 rounded mb-3"></div>
-          <div class="shimmer h-3 w-1/3 rounded mb-4"></div>
-          <div class="shimmer h-20 rounded mb-3"></div>
-          <div class="shimmer h-16 rounded"></div>
-        </div>
-        <div class="bg-white rounded-2xl p-5 shadow-sm hidden lg:block">
-          <div class="shimmer h-4 w-2/3 rounded mb-3"></div>
-          <div class="shimmer h-3 w-1/2 rounded mb-4"></div>
-          <div class="shimmer h-20 rounded mb-3"></div>
-          <div class="shimmer h-16 rounded"></div>
-        </div>
-        <div class="bg-white rounded-2xl p-5 shadow-sm hidden xl:block">
-          <div class="shimmer h-4 w-4/5 rounded mb-3"></div>
-          <div class="shimmer h-3 w-1/3 rounded mb-4"></div>
-          <div class="shimmer h-20 rounded mb-3"></div>
-          <div class="shimmer h-16 rounded"></div>
+        <h2 class="text-xl font-semibold text-slate-700 mb-2">분석 준비 완료</h2>
+        <p class="text-slate-500 max-w-sm text-sm leading-relaxed">
+          상단의 <strong class="text-slate-700">뉴스 수집 및 분석</strong> 버튼을 클릭하면
+          글로벌 뉴스를 수집하고 AI가 양말단 SSBR 연관 기사를 자동으로 분석합니다.
+        </p>
+        <div class="mt-6 flex flex-wrap justify-center gap-2">
+          <span class="bg-white border border-slate-200 text-slate-600 text-xs px-3 py-1.5 rounded-full shadow-sm">
+            <i class="fas fa-globe text-blue-400 mr-1"></i> Google News 다중 쿼리
+          </span>
+          <span class="bg-white border border-slate-200 text-slate-600 text-xs px-3 py-1.5 rounded-full shadow-sm">
+            <i class="fas fa-brain text-purple-400 mr-1"></i> Claude AI 연관성 점수 분석
+          </span>
+          <span class="bg-white border border-slate-200 text-slate-600 text-xs px-3 py-1.5 rounded-full shadow-sm">
+            <i class="fas fa-lightbulb text-yellow-400 mr-1"></i> 비즈니스 인사이트 자동 생성
+          </span>
         </div>
       </div>
-    </div>
 
-    <!-- 오류 -->
-    <div id="errorState" class="hidden flex flex-col items-center py-16 text-center">
-      <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
-        <i class="fas fa-triangle-exclamation text-red-500 text-2xl"></i>
+      <!-- 로딩 -->
+      <div id="loadingState" class="hidden">
+        <div class="flex flex-col items-center py-16">
+          <div class="relative mb-6">
+            <div class="w-16 h-16 border-4 border-blue-100 rounded-full"></div>
+            <div class="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full spin-slow absolute inset-0"></div>
+          </div>
+          <p class="text-slate-700 font-semibold text-lg mb-1">뉴스 수집 및 분석 중...</p>
+          <p class="text-slate-400 text-sm">글로벌 뉴스 소스에서 SSBR 관련 기사를 수집하고 AI가 분석 중입니다</p>
+        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-5 mt-4">
+          <div class="bg-white rounded-2xl p-5 shadow-sm">
+            <div class="shimmer h-4 w-3/4 rounded mb-3"></div>
+            <div class="shimmer h-3 w-1/3 rounded mb-4"></div>
+            <div class="shimmer h-20 rounded mb-3"></div>
+            <div class="shimmer h-16 rounded"></div>
+          </div>
+          <div class="bg-white rounded-2xl p-5 shadow-sm hidden lg:block">
+            <div class="shimmer h-4 w-2/3 rounded mb-3"></div>
+            <div class="shimmer h-3 w-1/2 rounded mb-4"></div>
+            <div class="shimmer h-20 rounded mb-3"></div>
+            <div class="shimmer h-16 rounded"></div>
+          </div>
+          <div class="bg-white rounded-2xl p-5 shadow-sm hidden xl:block">
+            <div class="shimmer h-4 w-4/5 rounded mb-3"></div>
+            <div class="shimmer h-3 w-1/3 rounded mb-4"></div>
+            <div class="shimmer h-20 rounded mb-3"></div>
+            <div class="shimmer h-16 rounded"></div>
+          </div>
+        </div>
       </div>
-      <h3 class="text-lg font-semibold text-slate-700 mb-1">오류가 발생했습니다</h3>
-      <p id="errorMsg" class="text-slate-500 text-sm max-w-md"></p>
-      <button
-        onclick="collectNews()"
-        class="mt-5 bg-red-600 hover:bg-red-500 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors"
-      >
-        <i class="fas fa-rotate-right mr-2"></i>재시도
-      </button>
-    </div>
 
-    <!-- 빈 결과 -->
-    <div id="noResultState" class="hidden flex flex-col items-center py-16 text-center">
-      <div class="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mb-4">
-        <i class="fas fa-filter text-amber-500 text-2xl"></i>
+      <!-- 오류 -->
+      <div id="errorState" class="hidden flex flex-col items-center py-16 text-center">
+        <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
+          <i class="fas fa-triangle-exclamation text-red-500 text-2xl"></i>
+        </div>
+        <h3 class="text-lg font-semibold text-slate-700 mb-1">오류가 발생했습니다</h3>
+        <p id="errorMsg" class="text-slate-500 text-sm max-w-md"></p>
+        <button onclick="collectNews()"
+          class="mt-5 bg-red-600 hover:bg-red-500 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors">
+          <i class="fas fa-rotate-right mr-2"></i>재시도
+        </button>
       </div>
-      <h3 class="text-lg font-semibold text-slate-700 mb-1">선별된 기사 없음</h3>
-      <p class="text-slate-500 text-sm max-w-sm">
-        수집된 기사가 없습니다. 잠시 후 다시 시도하세요.
-      </p>
-    </div>
 
-    <!-- 기사 그리드 -->
-    <div id="articlesGrid" class="hidden grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-5">
-    </div>
+      <!-- 빈 결과 -->
+      <div id="noResultState" class="hidden flex flex-col items-center py-16 text-center">
+        <div class="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mb-4">
+          <i class="fas fa-filter text-amber-500 text-2xl"></i>
+        </div>
+        <h3 class="text-lg font-semibold text-slate-700 mb-1">분석된 기사 없음</h3>
+        <p class="text-slate-500 text-sm max-w-sm">수집된 기사가 없습니다. 잠시 후 다시 시도하세요.</p>
+      </div>
+
+      <!-- 세션 요약 -->
+      <div id="sessionSummaryBox" class="hidden mb-6 bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
+        <h3 class="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
+          <i class="fas fa-chart-line text-green-500"></i> 이번 분석 요약
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="trend-box rounded-xl p-3.5">
+            <p class="text-xs font-semibold text-green-700 mb-1.5 flex items-center gap-1">
+              <i class="fas fa-globe"></i> 시장 동향
+            </p>
+            <p id="summaryMarketTrend" class="text-slate-700 text-xs leading-relaxed"></p>
+          </div>
+          <div class="insight-box rounded-xl p-3.5">
+            <p class="text-xs font-semibold text-yellow-700 mb-1.5 flex items-center gap-1">
+              <i class="fas fa-lightbulb"></i> 핵심 시사점
+            </p>
+            <p id="summaryKeyInsight" class="text-slate-700 text-xs leading-relaxed"></p>
+          </div>
+        </div>
+        <div class="mt-3">
+          <p class="text-xs font-semibold text-slate-500 mb-2">주요 키워드</p>
+          <div id="summaryKeywords" class="flex flex-wrap gap-1.5"></div>
+        </div>
+      </div>
+
+      <!-- 기사 그리드 -->
+      <div id="articlesGrid" class="hidden grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-5"></div>
+
+    </div><!-- /tabAnalysis -->
+
+    <!-- ── 분석 이력 탭 ──────────────────────────────────────────── -->
+    <div id="tabHistory" class="hidden">
+
+      <!-- 키워드 트렌드 -->
+      <div id="keywordTrendBox" class="hidden mb-6 bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
+        <h3 class="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
+          <i class="fas fa-tags text-blue-500"></i> 키워드 트렌드 (최근 10회)
+        </h3>
+        <div id="keywordTrendList" class="space-y-2"></div>
+      </div>
+
+      <!-- 이력 목록 -->
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+        <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+          <h3 class="text-sm font-semibold text-slate-700 flex items-center gap-2">
+            <i class="fas fa-clock-rotate-left text-slate-400"></i> 분석 이력 목록
+          </h3>
+          <span id="historyCount" class="text-xs text-slate-400"></span>
+        </div>
+
+        <div id="historyEmpty" class="hidden py-16 text-center">
+          <i class="fas fa-inbox text-slate-300 text-3xl mb-3"></i>
+          <p class="text-slate-400 text-sm">저장된 분석 이력이 없습니다.</p>
+          <p class="text-slate-300 text-xs mt-1">뉴스 수집 및 분석을 실행하면 자동으로 저장됩니다.</p>
+        </div>
+
+        <div id="historyLoading" class="py-10 text-center">
+          <div class="inline-block w-6 h-6 border-2 border-blue-400 border-t-transparent rounded-full spin-slow"></div>
+        </div>
+
+        <div id="historyTable" class="hidden overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wide">
+              <tr>
+                <th class="px-5 py-3 text-left">분석 일시</th>
+                <th class="px-4 py-3 text-center">수집</th>
+                <th class="px-4 py-3 text-center">분석</th>
+                <th class="px-4 py-3 text-center">소요</th>
+                <th class="px-4 py-3 text-left">주요 키워드</th>
+                <th class="px-4 py-3 text-left">시장 동향 요약</th>
+                <th class="px-4 py-3 text-center">관리</th>
+              </tr>
+            </thead>
+            <tbody id="historyTbody" class="divide-y divide-slate-100"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div><!-- /tabHistory -->
 
   </main>
 
-  <!-- ══ 기사 카드 템플릿 (JS용) ══════════════════════════════════════ -->
+  <!-- ══ 기사 카드 템플릿 ═══════════════════════════════════════════ -->
   <template id="articleCardTpl">
     <article class="bg-white rounded-2xl shadow-sm card-hover overflow-hidden border border-slate-100 fade-in-up">
-
-      <!-- 상단 색상 바 + 점수 -->
       <div class="score-bar h-1.5"></div>
       <div class="p-5">
-
-        <!-- 점수 + 출처 -->
         <div class="flex items-start justify-between gap-3 mb-3">
           <div class="flex items-center gap-2 flex-wrap">
             <span class="score-badge text-white text-sm font-bold px-3 py-1 rounded-full shadow-sm">
@@ -259,69 +349,123 @@
           </div>
           <span class="date-text text-slate-400 text-xs whitespace-nowrap mt-1"></span>
         </div>
-
-        <!-- 제목 -->
         <a class="article-link block hover:text-blue-600 transition-colors" target="_blank" rel="noopener">
           <h3 class="title-text font-semibold text-slate-800 text-sm leading-snug mb-3 line-clamp-3 hover:underline"></h3>
         </a>
-
-        <!-- 핵심 키워드 -->
         <div class="keywords-wrap flex flex-wrap gap-1.5 mb-3"></div>
-
-        <!-- 요약 -->
         <div class="summary-box rounded-xl p-3.5 mb-3">
           <p class="text-xs font-semibold text-sky-700 mb-1.5 flex items-center gap-1">
             <i class="fas fa-align-left"></i> AI 요약
           </p>
           <p class="summary-text text-slate-700 text-xs leading-relaxed"></p>
         </div>
-
-        <!-- 비즈니스 인사이트 -->
         <div class="insight-box rounded-xl p-3.5">
           <p class="text-xs font-semibold text-yellow-700 mb-1.5 flex items-center gap-1">
             <i class="fas fa-lightbulb"></i> 비즈니스 인사이트
           </p>
           <p class="insight-text text-slate-700 text-xs leading-relaxed"></p>
         </div>
-
       </div>
     </article>
   </template>
 
+  <!-- ══ 이력 상세 모달 ════════════════════════════════════════════ -->
+  <div id="historyModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div class="modal-backdrop absolute inset-0" onclick="closeModal()"></div>
+    <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col">
+      <!-- 모달 헤더 -->
+      <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+        <div>
+          <h2 class="font-bold text-slate-800 text-base" id="modalTitle">분석 이력 상세</h2>
+          <p class="text-xs text-slate-400 mt-0.5" id="modalSubtitle"></p>
+        </div>
+        <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 transition-colors">
+          <i class="fas fa-xmark text-xl"></i>
+        </button>
+      </div>
+      <!-- 모달 세션 요약 -->
+      <div id="modalSummary" class="px-6 py-4 bg-slate-50 border-b border-slate-100">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+          <div class="trend-box rounded-xl p-3">
+            <p class="text-xs font-semibold text-green-700 mb-1"><i class="fas fa-globe mr-1"></i>시장 동향</p>
+            <p id="modalMarketTrend" class="text-slate-700 text-xs leading-relaxed"></p>
+          </div>
+          <div class="insight-box rounded-xl p-3">
+            <p class="text-xs font-semibold text-yellow-700 mb-1"><i class="fas fa-lightbulb mr-1"></i>핵심 시사점</p>
+            <p id="modalKeyInsight" class="text-slate-700 text-xs leading-relaxed"></p>
+          </div>
+        </div>
+        <div id="modalKeywords" class="flex flex-wrap gap-1.5"></div>
+      </div>
+      <!-- 모달 기사 목록 -->
+      <div class="overflow-y-auto flex-1 px-6 py-4">
+        <div id="modalArticleGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+      </div>
+    </div>
+  </div>
+
   <script>
-    /* ── 상태 관리 ─────────────────────────────────────────── */
+    /* ── 유틸 ──────────────────────────────────────────────────── */
     const $ = id => document.getElementById(id);
 
-    function show(id)  { $(id).classList.remove('hidden'); }
-    function hide(id)  { $(id).classList.add('hidden'); }
-    function hideAll() {
-      ['emptyState','loadingState','errorState','noResultState','articlesGrid'].forEach(hide);
+    function show(id) { $(id).classList.remove('hidden'); }
+    function hide(id) { $(id).classList.add('hidden'); }
+
+    function hideAnalysisStates() {
+      ['emptyState','loadingState','errorState','noResultState','sessionSummaryBox','articlesGrid'].forEach(hide);
     }
 
-    /* ── 날짜 포맷 ─────────────────────────────────────────── */
     function formatDate(str) {
       if (!str) return '';
       try {
-        const d = new Date(str);
-        return d.toLocaleDateString('ko-KR', { year:'numeric', month:'2-digit', day:'2-digit' });
+        return new Date(str).toLocaleDateString('ko-KR', { year:'numeric', month:'2-digit', day:'2-digit' });
       } catch { return str.slice(0, 10); }
     }
 
-    /* ── 점수별 색상 ──────────────────────────────────────── */
     function scoreStyle(score) {
       if (score >= 80) return { bar: '#10b981', badge: 'score-badge-high' };
       if (score >= 40) return { bar: '#f59e0b', badge: 'score-badge-mid' };
       return { bar: '#94a3b8', badge: 'score-badge-low' };
     }
 
-    /* ── 카드 생성 ────────────────────────────────────────── */
+    /* ── 탭 전환 ────────────────────────────────────────────── */
+    function switchTab(tab, btn) {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      if (tab === 'analysis') {
+        show('tabAnalysis');
+        hide('tabHistory');
+      } else {
+        hide('tabAnalysis');
+        show('tabHistory');
+        loadHistory();
+      }
+    }
+
+    /* ── 세션 요약 표시 ─────────────────────────────────────── */
+    function renderSessionSummary(summary) {
+      if (!summary || (!summary.market_trend && !summary.key_insight)) return;
+      $('summaryMarketTrend').textContent = summary.market_trend || '—';
+      $('summaryKeyInsight').textContent = summary.key_insight || '—';
+      const kwWrap = $('summaryKeywords');
+      kwWrap.innerHTML = '';
+      (summary.top_keywords || []).forEach(kw => {
+        const chip = document.createElement('span');
+        chip.className = 'keyword-chip-trend text-xs px-2.5 py-0.5 rounded-full font-medium';
+        chip.textContent = kw;
+        kwWrap.appendChild(chip);
+      });
+      show('sessionSummaryBox');
+    }
+
+    /* ── 기사 카드 생성 ─────────────────────────────────────── */
     function createCard(art, idx) {
       const tpl = document.getElementById('articleCardTpl');
       const clone = tpl.content.cloneNode(true);
       const el = clone.querySelector('article');
 
       el.style.animationDelay = `${idx * 60}ms`;
-
       const style = scoreStyle(art.relevance_score);
 
       el.querySelector('.score-bar').style.background = style.bar;
@@ -334,7 +478,6 @@
       link.href = art.link && art.link !== '#' ? art.link : '#';
       el.querySelector('.title-text').textContent = art.title;
 
-      // 키워드 칩
       const kwWrap = el.querySelector('.keywords-wrap');
       (art.core_keywords || []).forEach(kw => {
         const chip = document.createElement('span');
@@ -349,7 +492,7 @@
       return clone;
     }
 
-    /* ── 통계 바 갱신 ────────────────────────────────────── */
+    /* ── 통계 바 ────────────────────────────────────────────── */
     function updateStats(stats) {
       $('statCollected').textContent = `${stats.collected}건`;
       $('statFiltered').textContent = `${stats.filtered}건`;
@@ -358,7 +501,7 @@
       show('statsBar');
     }
 
-    /* ── 메인 수집 함수 ──────────────────────────────────── */
+    /* ── 뉴스 수집 메인 ─────────────────────────────────────── */
     async function collectNews() {
       const btn = $('collectBtn');
       $('btnIcon').className = 'fas fa-circle-notch text-sm spin-slow';
@@ -367,40 +510,48 @@
       btn.classList.replace('bg-blue-600', 'bg-blue-400');
       btn.classList.replace('hover:bg-blue-500', 'cursor-not-allowed');
 
-      hideAll();
+      hideAnalysisStates();
       show('loadingState');
+
+      // 분석 탭으로 자동 전환
+      document.querySelectorAll('.tab-btn').forEach((b, i) => {
+        b.classList.toggle('active', i === 0);
+      });
+      show('tabAnalysis');
+      hide('tabHistory');
 
       try {
         const res = await fetch('/api/collect', { method: 'POST' });
         const data = await res.json();
 
         if (!res.ok || data.error) {
-          hideAll();
+          hideAnalysisStates();
           $('errorMsg').textContent = data.error || '알 수 없는 오류가 발생했습니다.';
           show('errorState');
           return;
         }
 
         updateStats(data.stats);
+        renderSessionSummary(data.session_summary);
 
         if (!data.articles || data.articles.length === 0) {
-          hideAll();
+          hideAnalysisStates();
           show('noResultState');
           return;
         }
 
-        // 점수 내림차순 정렬
         data.articles.sort((a, b) => b.relevance_score - a.relevance_score);
 
         const grid = $('articlesGrid');
         grid.innerHTML = '';
         data.articles.forEach((art, i) => grid.appendChild(createCard(art, i)));
 
-        hideAll();
+        hideAnalysisStates();
+        if (data.session_summary && data.session_summary.market_trend) show('sessionSummaryBox');
         show('articlesGrid');
 
       } catch (err) {
-        hideAll();
+        hideAnalysisStates();
         $('errorMsg').textContent = `네트워크 오류: ${err.message}`;
         show('errorState');
       } finally {
@@ -411,6 +562,164 @@
         btn.classList.replace('cursor-not-allowed', 'hover:bg-blue-500');
       }
     }
+
+    /* ── 이력 목록 로드 ─────────────────────────────────────── */
+    async function loadHistory() {
+      show('historyLoading');
+      hide('historyTable');
+      hide('historyEmpty');
+      hide('keywordTrendBox');
+
+      try {
+        const res = await fetch('/api/history');
+        const data = await res.json();
+        const sessions = data.sessions || [];
+
+        hide('historyLoading');
+        $('historyCount').textContent = `총 ${sessions.length}건`;
+
+        if (sessions.length === 0) {
+          show('historyEmpty');
+          return;
+        }
+
+        // 키워드 트렌드 렌더링
+        renderKeywordTrend(sessions);
+
+        // 이력 테이블 렌더링
+        const tbody = $('historyTbody');
+        tbody.innerHTML = '';
+        sessions.forEach(s => {
+          const tr = document.createElement('tr');
+          tr.className = 'history-row';
+          tr.onclick = () => openHistoryDetail(s.id);
+
+          const kwHtml = (s.top_keywords || []).slice(0, 3).map(kw =>
+            `<span class="keyword-chip-trend text-xs px-2 py-0.5 rounded-full">${kw}</span>`
+          ).join('');
+
+          tr.innerHTML = `
+            <td class="px-5 py-3.5 text-slate-700 font-medium whitespace-nowrap">
+              <i class="fas fa-clock text-slate-300 mr-1.5"></i>${s.created_at}
+            </td>
+            <td class="px-4 py-3.5 text-center text-slate-600">${s.collected_count}건</td>
+            <td class="px-4 py-3.5 text-center text-emerald-600 font-semibold">${s.analyzed_count}건</td>
+            <td class="px-4 py-3.5 text-center text-blue-500">${s.elapsed_seconds}초</td>
+            <td class="px-4 py-3.5"><div class="flex flex-wrap gap-1">${kwHtml}</div></td>
+            <td class="px-4 py-3.5 text-slate-500 text-xs max-w-xs truncate">${s.market_trend || '—'}</td>
+            <td class="px-4 py-3.5 text-center">
+              <button onclick="event.stopPropagation(); deleteSession(${s.id}, this)"
+                class="text-slate-300 hover:text-red-400 transition-colors text-sm">
+                <i class="fas fa-trash"></i>
+              </button>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+
+        show('historyTable');
+
+      } catch (err) {
+        hide('historyLoading');
+        show('historyEmpty');
+      }
+    }
+
+    /* ── 키워드 트렌드 렌더링 ───────────────────────────────── */
+    function renderKeywordTrend(sessions) {
+      const container = $('keywordTrendList');
+      container.innerHTML = '';
+
+      // 키워드 빈도 집계
+      const freq = {};
+      sessions.forEach(s => {
+        (s.top_keywords || []).forEach(kw => {
+          freq[kw] = (freq[kw] || 0) + 1;
+        });
+      });
+
+      const sorted = Object.entries(freq).sort((a, b) => b[1] - a[1]).slice(0, 10);
+      if (sorted.length === 0) return;
+
+      const maxCount = sorted[0][1];
+      sorted.forEach(([kw, count]) => {
+        const pct = Math.round((count / maxCount) * 100);
+        const div = document.createElement('div');
+        div.className = 'flex items-center gap-3';
+        div.innerHTML = `
+          <span class="text-xs text-slate-600 w-32 text-right truncate font-medium">${kw}</span>
+          <div class="flex-1 bg-slate-100 rounded-full h-2 overflow-hidden">
+            <div class="bg-blue-400 h-2 rounded-full transition-all" style="width:${pct}%"></div>
+          </div>
+          <span class="text-xs text-slate-400 w-10">${count}회</span>
+        `;
+        container.appendChild(div);
+      });
+
+      show('keywordTrendBox');
+    }
+
+    /* ── 이력 상세 모달 ─────────────────────────────────────── */
+    async function openHistoryDetail(sessionId) {
+      show('historyModal');
+      $('modalTitle').textContent = '분석 이력 상세';
+      $('modalSubtitle').textContent = '불러오는 중...';
+      $('modalArticleGrid').innerHTML = '<div class="col-span-2 py-10 text-center text-slate-400 text-sm">로딩 중...</div>';
+
+      try {
+        const res = await fetch(`/api/history/${sessionId}`);
+        const data = await res.json();
+
+        if (data.error) throw new Error(data.error);
+
+        $('modalTitle').textContent = `분석 이력 #${data.id}`;
+        $('modalSubtitle').textContent = `${data.created_at} · 수집 ${data.collected_count}건 · 분석 ${data.analyzed_count}건 · ${data.elapsed_seconds}초`;
+        $('modalMarketTrend').textContent = data.market_trend || '—';
+        $('modalKeyInsight').textContent = data.key_insight || '—';
+
+        const kwWrap = $('modalKeywords');
+        kwWrap.innerHTML = '';
+        (data.top_keywords || []).forEach(kw => {
+          const chip = document.createElement('span');
+          chip.className = 'keyword-chip-trend text-xs px-2.5 py-0.5 rounded-full font-medium';
+          chip.textContent = kw;
+          kwWrap.appendChild(chip);
+        });
+
+        const grid = $('modalArticleGrid');
+        grid.innerHTML = '';
+        (data.articles || []).forEach((art, i) => {
+          grid.appendChild(createCard(art, i));
+        });
+
+      } catch (err) {
+        $('modalSubtitle').textContent = '오류가 발생했습니다.';
+        $('modalArticleGrid').innerHTML = `<div class="col-span-2 py-10 text-center text-red-400 text-sm">${err.message}</div>`;
+      }
+    }
+
+    function closeModal() {
+      hide('historyModal');
+    }
+
+    /* ── 이력 삭제 ──────────────────────────────────────────── */
+    async function deleteSession(sessionId, btn) {
+      if (!confirm('이 분석 이력을 삭제할까요?')) return;
+      try {
+        const res = await fetch(`/api/history/${sessionId}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (data.ok) {
+          btn.closest('tr').remove();
+        }
+      } catch (err) {
+        alert('삭제 중 오류가 발생했습니다.');
+      }
+    }
+
+    /* ── ESC 키로 모달 닫기 ─────────────────────────────────── */
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') closeModal();
+    });
   </script>
 </body>
 </html>
