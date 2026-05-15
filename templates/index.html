@@ -477,13 +477,14 @@
     const el = clone.querySelector('article');
     el.style.animationDelay = `${idx*60}ms`;
 
-    const companyInfo = CUSTOMERS[art.company] || {color:'#64748b'};
+    const company = art.company || art.tag || '—';
+    const companyInfo = CUSTOMERS[company] || {color:'#64748b'};
     const style = scoreStyle(art.relevance_score);
 
     el.querySelector('.company-bar').style.background = companyInfo.color;
     const compBadge = el.querySelector('.company-badge');
     compBadge.style.background = companyInfo.color;
-    compBadge.textContent = art.company || '—';
+    compBadge.textContent = company;
 
     el.querySelector('.score-badge').classList.add(style.badge);
     el.querySelector('.score-text').textContent = `${art.relevance_score}점`;
@@ -516,13 +517,14 @@
     const el = clone.querySelector('article');
     el.style.animationDelay = `${idx*60}ms`;
 
-    const matInfo = MATERIALS[art.material] || {color:'#64748b'};
+    const material = art.material || art.tag || '—';
+    const matInfo = MATERIALS[material] || {color:'#64748b'};
     const style = scoreStyle(art.relevance_score);
 
     el.querySelector('.material-bar').style.background = matInfo.color;
     const matBadge = el.querySelector('.material-badge');
     matBadge.style.background = matInfo.color;
-    matBadge.textContent = art.material || '—';
+    matBadge.textContent = material;
 
     el.querySelector('.score-badge').classList.add(style.badge);
     el.querySelector('.score-text').textContent = `${art.relevance_score}점`;
