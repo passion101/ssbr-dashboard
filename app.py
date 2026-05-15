@@ -16,6 +16,7 @@ from dotenv import load_dotenv
 load_dotenv(override=True)
 
 app = Flask(__name__)
+app.config["TEMPLATES_AUTO_RELOAD"] = True
 
 DB_PATH = os.path.join(os.path.dirname(__file__), "ssbr.db")
 
@@ -252,10 +253,13 @@ def get_session_detail(session_id):
                     kw = json.loads(a["core_keywords"] or "[]")
                 except Exception:
                     pass
+                raw_si = a["sales_insights"] or ""
                 try:
-                    si = json.loads(a["sales_insights"] or "[]")
+                    si = json.loads(raw_si)
+                    if not isinstance(si, list):
+                        si = raw_si  # 문자열이면 그대로 사용
                 except Exception:
-                    pass
+                    si = raw_si  # JSON 파싱 실패 시 원문 문자열 사용
                 result.append({
                     "id": a["id"],
                     "tag": a["tag"],
