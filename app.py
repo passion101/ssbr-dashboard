@@ -256,8 +256,6 @@ def get_session_detail(session_id):
                 raw_si = a["sales_insights"] or ""
                 try:
                     si = json.loads(raw_si)
-                    if not isinstance(si, list):
-                        si = raw_si  # 문자열이면 그대로 사용
                 except Exception:
                     si = raw_si  # JSON 파싱 실패 시 원문 문자열 사용
                 result.append({
@@ -565,11 +563,26 @@ def collect():
         material_articles = material_result.get("articles", [])
 
         # 세션 요약 병합
-        session_summary = {
-            "market_trend": customer_result.get("session_summary", {}).get("market_trend", ""),
-            "key_insight": material_result.get("session_summary", {}).get("key_insight", ""),
-            "top_keywords": [],
-        }
+        csum = customer_result.get("session_summary", {})
+        msum = material_result.get("session_summary", {})
+        if analysis_type == "customer":
+            session_summary = {
+                "market_trend": csum.get("market_trend", ""),
+                "key_insight":  csum.get("key_insight", ""),
+                "top_keywords": [],
+            }
+        elif analysis_type == "material":
+            session_summary = {
+                "market_trend": msum.get("market_trend", ""),
+                "key_insight":  msum.get("key_insight", ""),
+                "top_keywords": [],
+            }
+        else:  # all
+            session_summary = {
+                "market_trend": csum.get("market_trend", ""),
+                "key_insight":  msum.get("key_insight", ""),
+                "top_keywords": [],
+            }
 
         elapsed = round(time.time() - t0, 1)
         analyzed_count = len(customer_articles) + len(material_articles)
@@ -677,8 +690,6 @@ def insights():
             raw_si = a["sales_insights"] or ""
             try:
                 si = json.loads(raw_si)
-                if not isinstance(si, list):
-                    si = raw_si
             except Exception:
                 si = raw_si
             result.append({
