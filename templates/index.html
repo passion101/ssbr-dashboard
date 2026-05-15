@@ -177,8 +177,8 @@
           <div class="w-14 h-14 border-4 border-blue-100 rounded-full"></div>
           <div class="w-14 h-14 border-4 border-blue-600 border-t-transparent rounded-full spin-slow absolute inset-0"></div>
         </div>
-        <p class="text-slate-700 font-semibold text-base mb-1">고객사 · 소재 동시 분석 중...</p>
-        <p class="text-slate-400 text-sm">Claude AI가 두 가지 분석을 병렬로 처리하고 있습니다</p>
+        <p class="text-slate-700 font-semibold text-base mb-1" id="loadingTitle">분석 중...</p>
+        <p class="text-slate-400 text-sm" id="loadingDesc">Claude AI가 분석을 처리하고 있습니다</p>
       </div>
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 mt-2">
         <div class="bg-white rounded-2xl p-5 shadow-sm">
@@ -580,6 +580,16 @@
     // 분석 탭으로 전환
     document.querySelectorAll('.main-tab-btn').forEach((b,i)=>b.classList.toggle('active',i===0));
     show('tabAnalysis'); hide('tabHistory');
+
+    // 로딩 메시지 동적 설정
+    const loadingMap = {
+      all:      { title: '고객사 · 소재 동시 분석 중...', desc: 'Claude AI가 두 가지 분석을 병렬로 처리하고 있습니다' },
+      customer: { title: '고객사 분석 중...',             desc: '주요 6개사의 타이어 동향을 분석하고 있습니다' },
+      material: { title: '소재 분석 중...',               desc: 'SSBR·SBR·NBR 등 소재 시장을 분석하고 있습니다' },
+    };
+    const lm = loadingMap[selectedType] || loadingMap.all;
+    $('loadingTitle').textContent = lm.title;
+    $('loadingDesc').textContent  = lm.desc;
 
     hideAnalysisStates();
     show('loadingState');
