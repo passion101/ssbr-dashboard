@@ -730,12 +730,20 @@
   let activeTagBtn = null;
 
   async function selectTagFilter(tag, type, btn, color) {
-    // 버튼 활성화 토글
+    // 버튼 단일 선택 처리
     if (activeTagBtn === btn) {
       clearInsightFilter();
       return;
     }
-    if (activeTagBtn) activeTagBtn.classList.remove('selected');
+    // 이전 버튼 완전 초기화
+    if (activeTagBtn) {
+      const prevTag  = activeTagBtn.dataset.tag;
+      const prevType = activeTagBtn.dataset.type;
+      const prevInfo = prevType === 'customer' ? CUSTOMERS[prevTag] : MATERIALS[prevTag];
+      activeTagBtn.classList.remove('selected');
+      activeTagBtn.style.background = '#fff';
+      activeTagBtn.style.color = prevInfo?.color || '#64748b';
+    }
     activeTagBtn = btn;
     btn.classList.add('selected');
     btn.style.background = color;

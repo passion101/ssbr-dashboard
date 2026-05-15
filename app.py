@@ -656,7 +656,11 @@ def insights():
         conn = sqlite3.connect(DB_PATH)
         conn.row_factory = sqlite3.Row
         rows = conn.execute(
-            """SELECT a.*, s.created_at as session_date, s.id as session_id
+            """SELECT a.id, a.analysis_type, a.tag, a.title, a.source,
+                      a.published, a.link, a.relevance_score,
+                      a.core_keywords, a.summary, a.business_insight,
+                      a.sales_insights,
+                      s.id AS sess_id, s.created_at AS session_date
                FROM articles a
                JOIN sessions s ON a.session_id = s.id
                WHERE a.tag = ?
@@ -678,7 +682,7 @@ def insights():
             except Exception:
                 si = raw_si
             result.append({
-                "session_id":      a["session_id"],
+                "session_id":      a["sess_id"],
                 "session_date":    a["session_date"],
                 "analysis_type":   a["analysis_type"],
                 "tag":             a["tag"],
