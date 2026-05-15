@@ -27,6 +27,9 @@
     .score-badge-mid {
       background: linear-gradient(135deg, #d97706, #f59e0b);
     }
+    .score-badge-low {
+      background: linear-gradient(135deg, #64748b, #94a3b8);
+    }
 
     .keyword-chip {
       background: linear-gradient(135deg, #eff6ff, #dbeafe);
@@ -129,7 +132,7 @@
           <p class="text-white text-xl font-bold" id="statCollected">—</p>
         </div>
         <div class="stat-card rounded-xl px-4 py-3">
-          <p class="text-slate-400 text-xs mb-0.5">선별된 기사 (80점+)</p>
+          <p class="text-slate-400 text-xs mb-0.5">분석된 기사 (전체)</p>
           <p class="text-emerald-400 text-xl font-bold" id="statFiltered">—</p>
         </div>
         <div class="stat-card rounded-xl px-4 py-3">
@@ -162,7 +165,7 @@
           <i class="fas fa-globe text-blue-400 mr-1"></i> Google News 다중 쿼리
         </span>
         <span class="bg-white border border-slate-200 text-slate-600 text-xs px-3 py-1.5 rounded-full shadow-sm">
-          <i class="fas fa-brain text-purple-400 mr-1"></i> Claude AI 선별 (80점 이상)
+          <i class="fas fa-brain text-purple-400 mr-1"></i> Claude AI 연관성 점수 분석
         </span>
         <span class="bg-white border border-slate-200 text-slate-600 text-xs px-3 py-1.5 rounded-full shadow-sm">
           <i class="fas fa-lightbulb text-yellow-400 mr-1"></i> 비즈니스 인사이트 자동 생성
@@ -225,7 +228,7 @@
       </div>
       <h3 class="text-lg font-semibold text-slate-700 mb-1">선별된 기사 없음</h3>
       <p class="text-slate-500 text-sm max-w-sm">
-        수집된 기사 중 연관성 80점 이상인 SSBR 관련 기사가 없습니다. 잠시 후 다시 시도하세요.
+        수집된 기사가 없습니다. 잠시 후 다시 시도하세요.
       </p>
     </div>
 
@@ -306,8 +309,9 @@
 
     /* ── 점수별 색상 ──────────────────────────────────────── */
     function scoreStyle(score) {
-      if (score >= 90) return { bar: '#10b981', badge: 'score-badge-high' };
-      return { bar: '#f59e0b', badge: 'score-badge-mid' };
+      if (score >= 80) return { bar: '#10b981', badge: 'score-badge-high' };
+      if (score >= 40) return { bar: '#f59e0b', badge: 'score-badge-mid' };
+      return { bar: '#94a3b8', badge: 'score-badge-low' };
     }
 
     /* ── 카드 생성 ────────────────────────────────────────── */
